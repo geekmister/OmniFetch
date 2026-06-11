@@ -1,0 +1,70 @@
+{
+  "name": "omnifetch",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "OmniFetch - 通用视频下载器",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "download:bins": "node scripts/download-bins.mjs",
+    "build": "vue-tsc --noEmit && vite build",
+    "electron:dev": "cross-env NODE_ENV=development electron .",
+    "electron:build": "npm run download:bins && vite build && electron-builder",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-vue-next": "^0.300.0",
+    "pinia": "^2.1.0",
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "autoprefixer": "^10.4.0",
+    "cross-env": "^7.0.3",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vite-plugin-electron": "^0.28.0",
+    "vite-plugin-electron-renderer": "^0.14.0",
+    "vue-tsc": "^2.2.12"
+  },
+  "build": {
+    "appId": "com.geekmister.omnifetch",
+    "productName": "OmniFetch",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "bin/",
+        "to": "bin/",
+        "filter": ["**/*"]
+      }
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities",
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
