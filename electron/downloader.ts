@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'child_process'
+import { spawn, ChildProcess, execSync } from 'child_process'
 import { existsSync, mkdirSync } from 'fs'
 import { dirname } from 'path'
 import { getYtdlpPath, getFfmpegPath } from './bin-resolver'
@@ -25,13 +25,73 @@ export interface DownloadProgress {
   eta: string
 }
 
+/**
+ * 自动探测代理地址
+ * 优先级:
+ *   1. HTTPS_PROXY / HTTP_PROXY 环境变量
+ *   2. macOS 系统代理设置 (networksetup / scutil)
+ * 
+ * 如果你的 VPN/代理未通过环境变量暴露，请在启动前设置:
+ *   export HTTPS_PROXY=http://127.0.0.1:7890   # Clash 默认端口
+ */
+function detectProxy(): string | null {
+  // 1. 从环境变量读取
+  const envVars = ['HTTPS_PROXY', 'HTTP_PROXY', 'https_proxy', 'http_proxy', 'ALL_PROXY', 'all_proxy']
+  for (const key of envVars) {
+    const val = process.env[key]
+    if (val && (val.startsWith('http://') || val.startsWith('socks5://'))) {
+      return val
+    }
+  }
+
+  // 2. macOS: 读取系统代理设置
+  if (process.platform === 'darwin') {
+    try {
+      const output = execSync('scutil --proxy', { encoding: 'utf8', timeout: 3000 })
+      const httpsPort = output.match(/HTTPSPort\s*:\s*(\d+)/)
+      const httpsProxy = output.match(/HTTPSProxy\s*:\s*(\S+)/)
+      if (httpsPort && httpsProxy) {
+        const proxy = `http://${httpsProxy[1]}:${httpsPort[1]}`
+        console.log(`[proxy] 检测到 macOS 系统代理: ${proxy}`)
+        return proxy
+      }
+      // 回退到 HTTP 代理
+      const httpPort = output.match(/HTTPPort\s*:\s*(\d+)/)
+      const httpProxy = output.match(/HTTPProxy\s*:\s*(\S+)/)
+      if (httpPort && httpProxy) {
+        const proxy = `http://${httpProxy[1]}:${httpPort[1]}`
+        console.log(`[proxy] 检测到 macOS 系统代理: ${proxy}`)
+        return proxy
+      }
+    } catch {
+      // scutil 不可用时静默跳过
+    }
+  }
+
+  return null
+}
+
+/**
+ * 如果检测到代理，返回 yt-dlp --proxy 参数
+ */
+function getProxyArgs(): string[] {
+  const proxy = detectProxy()
+  if (proxy) {
+    console.log(`[proxy] 使用代理: ${proxy}`)
+    return ['--proxy', proxy]
+  }
+  console.log('[proxy] 未检测到代理环境变量，直连网络')
+  return []
+}
+
 function sanitizeFilename(name: string): string {
   return name.replace(/[<>:"/\\|?*]/g, '_').substring(0, 200)
 }
 
 export async function getVideoInfo(url: string): Promise<VideoInfo> {
   return new Promise((resolve, reject) => {
-    const ytdlp = spawn(getYtdlpPath(), ['-J', '--no-download', url])
+    const args = ['-J', '--no-download', ...getProxyArgs(), url]
+    const ytdlp = spawn(getYtdlpPath(), args)
     let stdout = ''
     let stderr = ''
 
@@ -131,6 +191,7 @@ export async function startDownload(
       '--newline',
       '--progress',
       '--no-playlist',
+      ...getProxyArgs(),
       url,
     ]
 

@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron'
-import renderer from 'vite-plugin-electron-renderer'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { copyFileSync, mkdirSync } from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -20,28 +20,37 @@ export default defineConfig({
         vite: {
           build: {
             outDir: 'dist-electron',
+            minify: false,
             rollupOptions: {
               external: ['electron'],
-            },
-          },
-        },
-      },
-      {
-        entry: 'electron/preload.ts',
-        onstart(options) {
-          options.reload()
-        },
-        vite: {
-          build: {
-            outDir: 'dist-electron',
-            rollupOptions: {
-              external: ['electron'],
+              output: {
+                format: 'cjs',
+                entryFileNames: '[name].js',
+              },
             },
           },
         },
       },
     ]),
-    renderer(),
+    // 将纯 CommonJS preload.cjs 直接复制到 dist-electron，绕过 ESM 编译
+    {
+      name: 'copy-preload-cjs',
+      buildStart() {
+        mkdirSync(resolve(__dirname, 'dist-electron'), { recursive: true })
+        copyFileSync(
+          resolve(__dirname, 'electron/preload.cjs'),
+          resolve(__dirname, 'dist-electron/preload.cjs')
+        )
+      },
+      closeBundle() {
+        mkdirSync(resolve(__dirname, 'dist-electron'), { recursive: true })
+        copyFileSync(
+          resolve(__dirname, 'electron/preload.cjs'),
+          resolve(__dirname, 'dist-electron/preload.cjs')
+        )
+        console.log('  ✅ preload.cjs → dist-electron/preload.cjs')
+      },
+    },
   ],
   resolve: {
     alias: {

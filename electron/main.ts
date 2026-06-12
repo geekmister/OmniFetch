@@ -10,15 +10,19 @@ const __dirname = dirname(__filename)
 let mainWindow: BrowserWindow | null = null
 
 function createWindow() {
+  // preload.cjs 是纯 CommonJS 文件，绕过 ESM 编译问题
+  const preloadPath = join(__dirname, 'preload.cjs')
+
   mainWindow = new BrowserWindow({
     width: 900,
     height: 700,
     minWidth: 640,
     minHeight: 480,
     webPreferences: {
-      preload: join(__dirname, 'preload.js'),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: false,
     },
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#0d1117',

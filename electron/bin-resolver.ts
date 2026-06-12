@@ -26,6 +26,13 @@ function getBinPath(name: string): string {
 }
 
 /**
+ * 获取二进制目录路径
+ */
+export function getYtdlpDir(): string {
+  return getBinDir()
+}
+
+/**
  * 获取 yt-dlp 可执行文件路径
  * 优先级: 内置二进制 > 系统 PATH
  */
@@ -49,11 +56,4 @@ export function getFfmpegPath(): string {
   }
   // 兜底: 使用系统 PATH 中的 ffmpeg
   return 'ffmpeg'
-}
-
-/**
- * 获取 yt-dlp 二进制所在目录（用于自动更新）
- */
-export function getYtdlpDir(): string {
-  return getBinDir()
 }
