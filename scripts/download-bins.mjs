@@ -2,7 +2,7 @@
  * 构建时下载 yt-dlp 和 ffmpeg 二进制文件到 bin/ 目录
  * 用法: node scripts/download-bins.mjs
  */
-import { createWriteStream, existsSync, mkdirSync, chmodSync, unlinkSync } from 'fs'
+import { createWriteStream, existsSync, mkdirSync, chmodSync, unlinkSync, renameSync } from 'fs'
 import { get } from 'https'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -51,21 +51,49 @@ function getFfmpegName() {
   return PLATFORM === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'
 }
 
-// ===== 下载工具函数 =====
+// ===== 检测系统代理（用于日志提示）=====
+function detectProxy() {
+  for (const key of ['HTTPS_PROXY', 'HTTP_PROXY', 'https_proxy', 'http_proxy']) {
+    if (process.env[key] && process.env[key].startsWith('http')) return process.env[key]
+  }
+  if (process.platform === 'darwin') {
+    try {
+      const out = execSync('scutil --proxy', { encoding: 'utf8', timeout: 3000 })
+      const m = out.match(/HTTPSProxy\s*:\s*(\S+)/)
+      const p = out.match(/HTTPSPort\s*:\s*(\d+)/)
+      if (m && p) return `http://${m[1]}:${p[1]}`
+    } catch {}
+  }
+  return null
+}
+
+const PROXY = detectProxy()
+if (PROXY) console.log(`   💡 检测到系统代理: ${PROXY}，如需代理请设置环境变量 https_proxy=${PROXY}`)
+
+// ===== 下载工具函数（先下载到 .tmp 文件，成功后原子替换）=====
 function downloadFile(url, destPath) {
   return new Promise((resolve, reject) => {
+    const tmpPath = destPath + '.tmp'
     console.log(`  ⬇ 下载: ${url}`)
-    const file = createWriteStream(destPath)
+
+    // 清理上次残留的临时文件
+    if (existsSync(tmpPath)) unlinkSync(tmpPath)
+
+    const file = createWriteStream(tmpPath)
+    let finished = false
+
+    const cleanup = () => {
+      file.close()
+      try { if (existsSync(tmpPath)) unlinkSync(tmpPath) } catch {}
+    }
+
     get(url, (response) => {
-      // 处理重定向
       if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-        file.close()
-        unlinkSync(destPath)
+        cleanup()
         return downloadFile(response.headers.location, destPath).then(resolve).catch(reject)
       }
       if (response.statusCode !== 200) {
-        file.close()
-        unlinkSync(destPath)
+        cleanup()
         reject(new Error(`HTTP ${response.statusCode}`))
         return
       }
@@ -80,16 +108,26 @@ function downloadFile(url, destPath) {
       })
       response.pipe(file)
       file.on('finish', () => {
+        if (finished) return
+        finished = true
         file.close()
+        // 原子替换：临时文件 -> 目标文件，不破坏已存在的文件
+        if (existsSync(destPath)) unlinkSync(destPath)
+        renameSync(tmpPath, destPath)
         console.log(' ✓')
         resolve()
       })
-      file.on('error', (err) => {
-        file.close()
-        unlinkSync(destPath)
-        reject(err)
-      })
-    }).on('error', reject)
+      file.on('error', (err) => { if (!finished) { finished = true; cleanup(); reject(err) } })
+    }).on('error', (err) => { if (!finished) { finished = true; cleanup(); reject(err) } })
+
+    // 5 分钟超时保护
+    setTimeout(() => {
+      if (!finished) {
+        finished = true
+        cleanup()
+        reject(new Error('下载超时（超过 5 分钟）'))
+      }
+    }, 300000)
   })
 }
 
