@@ -6,11 +6,14 @@
         <div v-if="store.downloadComplete" class="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center">
           <Check class="w-3 h-3 text-success" />
         </div>
+        <div v-else-if="store.isPaused" class="w-5 h-5 rounded-full bg-warning/20 flex items-center justify-center">
+          <Pause class="w-3 h-3 text-warning" />
+        </div>
         <div v-else class="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center">
           <Loader2 class="w-3 h-3 text-accent animate-spin" />
         </div>
-        <span class="text-sm font-medium text-text-primary">
-          {{ store.downloadComplete ? '下载完成' : '正在下载...' }}
+        <span class="text-sm font-medium" :class="store.downloadComplete ? 'text-text-primary' : store.isPaused ? 'text-warning' : 'text-text-primary'">
+          {{ store.downloadComplete ? '下载完成' : store.isPaused ? '已暂停' : '正在下载...' }}
         </span>
       </div>
       <span class="text-sm font-mono text-text-secondary">{{ Math.round(store.progress) }}%</span>
@@ -20,7 +23,7 @@
     <div class="relative h-2 rounded-full bg-surface overflow-hidden">
       <div
         class="absolute inset-y-0 left-0 rounded-full transition-all duration-300 ease-out"
-        :class="store.downloadComplete ? 'bg-success' : 'bg-accent'"
+        :class="store.downloadComplete ? 'bg-success' : store.isPaused ? 'bg-warning' : 'bg-accent'"
         :style="{ width: `${store.progress}%` }"
       />
     </div>
@@ -45,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check, Loader2, Gauge, Timer } from 'lucide-vue-next'
+import { Check, Loader2, Gauge, Timer, Pause } from 'lucide-vue-next'
 import { useDownloadStore } from '../stores/download'
 
 const store = useDownloadStore()

@@ -67,6 +67,15 @@
            transition-all duration-150 ease-out;
   }
 
+  .btn-danger {
+    @apply px-5 py-2 rounded-lg font-medium text-sm
+           bg-danger/10 text-danger
+           border border-danger/30
+           hover:bg-danger/20
+           transition-all duration-150 ease-out
+           active:scale-[0.98];
+  }
+
   .input-field {
     @apply w-full px-4 py-2.5 rounded-lg
            bg-surface-elevated text-text-primary

@@ -10,6 +10,9 @@ interface ElectronAPI {
   getVideoInfo: (url: string) => Promise<{ success: boolean; data?: VideoInfo; error?: string }>
   selectOutputPath: (defaultName: string) => Promise<string | null>
   startDownload: (url: string, formatId: string, outputPath: string) => Promise<{ success: boolean; data?: any; error?: string }>
+  pauseDownload: () => Promise<{ success: boolean }>
+  resumeDownload: () => Promise<{ success: boolean }>
+  cancelDownload: () => Promise<{ success: boolean; deleted?: boolean; cancelled?: boolean }>
   onDownloadProgress: (callback: (progress: DownloadProgress) => void) => void
   removeDownloadProgressListener: () => void
 }

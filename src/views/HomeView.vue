@@ -38,7 +38,7 @@
     </div>
 
     <!-- 下载按钮 -->
-    <DownloadButton v-if="store.videoInfo && !store.isParsing && !store.isDownloading" />
+    <DownloadButton v-if="store.videoInfo && !store.isParsing" />
   </div>
 </template>
 

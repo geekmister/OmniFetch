@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Notification } from 'electron'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { getVideoInfo, startDownload } from './downloader'
+import { getVideoInfo, startDownload, pauseDownload, resumeDownload, cancelDownload, getCurrentDownload } from './downloader'
 import { checkAndUpdateYtdlp } from './ytdlp-updater'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -72,14 +72,19 @@ ipcMain.handle('get-video-info', async (_event, url: string) => {
 })
 
 ipcMain.handle('select-output-path', async (_event, defaultName: string) => {
-  const result = await dialog.showSaveDialog(mainWindow!, {
-    defaultPath: defaultName,
-    filters: [
-      { name: '视频文件', extensions: ['mp4', 'webm', 'mkv'] },
-      { name: '所有文件', extensions: ['*'] },
-    ],
-  })
-  return result.canceled ? null : result.filePath
+  if (!mainWindow) return null
+  try {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      defaultPath: defaultName,
+      filters: [
+        { name: '视频文件', extensions: ['mp4', 'webm', 'mkv'] },
+        { name: '所有文件', extensions: ['*'] },
+      ],
+    })
+    return result.canceled ? null : result.filePath
+  } catch {
+    return null
+  }
 })
 
 ipcMain.handle('start-download', async (_event, url: string, formatId: string, outputPath: string) => {
@@ -87,8 +92,8 @@ ipcMain.handle('start-download', async (_event, url: string, formatId: string, o
     const result = await startDownload(url, formatId, outputPath, (progress) => {
       mainWindow?.webContents.send('download-progress', progress)
     })
-    // 下载完成通知
-    if (result.success) {
+    // 下载完成通知（用户主动取消的不弹）
+    if (result.success && !result.cancelled) {
       new Notification({
         title: '下载完成',
         body: `视频已保存到 ${result.path}`,
@@ -97,5 +102,52 @@ ipcMain.handle('start-download', async (_event, url: string, formatId: string, o
     return { success: true, data: result }
   } catch (err: any) {
     return { success: false, error: err.message }
+  }
+})
+
+// ===== 暂停/继续/取消下载 =====
+
+ipcMain.handle('pause-download', async () => {
+  return { success: pauseDownload() }
+})
+
+ipcMain.handle('resume-download', async () => {
+  return { success: resumeDownload() }
+})
+
+ipcMain.handle('cancel-download', async () => {
+  const { process: proc, outputPath } = getCurrentDownload()
+
+  // 没有活跃下载，直接返回
+  if (!proc && !outputPath) {
+    return { success: true, deleted: false }
+  }
+
+  const fileName = outputPath
+    ? outputPath.split('/').pop() || outputPath.split('\\').pop()
+    : '未保存的文件'
+
+  try {
+    const result = await dialog.showMessageBox(mainWindow!, {
+      type: 'warning',
+      title: '取消下载',
+      message: '确定要取消下载吗？',
+      detail: `是否删除已下载的部分文件？\n\n${fileName}`,
+      buttons: ['保留文件', '删除文件', '不取消'],
+      defaultId: 2,
+      cancelId: 2,
+    })
+
+    if (result.response === 2) {
+      return { success: false, cancelled: true }
+    }
+
+    const deleteFile = result.response === 1
+    cancelDownload(deleteFile)
+    return { success: true, deleted: deleteFile }
+  } catch {
+    // 对话框异常时默认取消且不删除
+    cancelDownload(false)
+    return { success: true, deleted: false }
   }
 })
