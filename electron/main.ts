@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Notification } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Notification, nativeImage } from 'electron'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { getVideoInfo, startDownload, pauseDownload, resumeDownload, cancelDownload, getCurrentDownload } from './downloader'
@@ -13,11 +13,22 @@ function createWindow() {
   // preload.cjs 是纯 CommonJS 文件，绕过 ESM 编译问题
   const preloadPath = join(__dirname, 'preload.cjs')
 
+  // 开发模式设置应用图标
+  const iconPath = join(__dirname, '..', 'build', process.platform === 'darwin' ? 'icon.icns' : 'icon.png')
+  if (!app.isPackaged) {
+    // macOS Dock 图标用 PNG 更稳定
+    const dockIcon = nativeImage.createFromPath(join(__dirname, '..', 'build', 'icon.png'))
+    if (!dockIcon.isEmpty()) {
+      app.dock?.setIcon(dockIcon.resize({ width: 256, height: 256 }))
+    }
+  }
+
   mainWindow = new BrowserWindow({
     width: 900,
     height: 700,
     minWidth: 640,
     minHeight: 480,
+    icon: !app.isPackaged ? iconPath : undefined,
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,

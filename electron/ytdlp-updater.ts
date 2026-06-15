@@ -9,7 +9,10 @@ import { join } from 'path'
 import { getYtdlpPath, getYtdlpDir } from './bin-resolver'
 
 const isWin = process.platform === 'win32'
-const YTDLP_UPDATE_URL = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp'
+const isMac = process.platform === 'darwin'
+const YTDLP_UPDATE_URL = isMac
+  ? 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos'
+  : 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp'
 const YTDLP_UPDATE_URL_WIN = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe'
 
 /**
@@ -43,6 +46,14 @@ function downloadLatest(destPath: string): Promise<boolean> {
     const file = createWriteStream(tmpPath)
 
     get(url, (response) => {
+      // 检查 HTTP 状态码
+      if (response.statusCode && response.statusCode >= 400) {
+        file.close()
+        cleanupTmp(tmpPath)
+        console.error(`[yt-dlp] 下载失败，HTTP ${response.statusCode}`)
+        resolve(false)
+        return
+      }
       // 处理重定向
       if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
         file.close()
@@ -50,19 +61,42 @@ function downloadLatest(destPath: string): Promise<boolean> {
         get(response.headers.location, (redirectRes) => {
           redirectRes.pipe(createWriteStream(tmpPath))
             .on('finish', () => finishUpdate(tmpPath, destPath, resolve))
-            .on('error', () => resolve(false))
+            .on('error', () => {
+              cleanupTmp(tmpPath)
+              resolve(false)
+            })
         })
         return
       }
       response.pipe(file)
       file.on('finish', () => finishUpdate(tmpPath, destPath, resolve))
-      file.on('error', () => resolve(false))
-    }).on('error', () => resolve(false))
+      file.on('error', () => {
+        cleanupTmp(tmpPath)
+        resolve(false)
+      })
+    }).on('error', () => {
+      cleanupTmp(tmpPath)
+      resolve(false)
+    })
   })
+}
+
+function cleanupTmp(tmpPath: string) {
+  try {
+    if (existsSync(tmpPath)) unlinkSync(tmpPath)
+  } catch {}
 }
 
 function finishUpdate(tmpPath: string, destPath: string, resolve: (ok: boolean) => void) {
   try {
+    // 校验下载的文件不为空
+    const stat = existsSync(tmpPath) ? require('fs').statSync(tmpPath) : null
+    if (!stat || stat.size === 0) {
+      console.error('[yt-dlp] 下载的文件为空，放弃更新')
+      cleanupTmp(tmpPath)
+      resolve(false)
+      return
+    }
     // 替换旧文件
     if (existsSync(destPath)) {
       unlinkSync(destPath)
@@ -75,6 +109,7 @@ function finishUpdate(tmpPath: string, destPath: string, resolve: (ok: boolean) 
     resolve(true)
   } catch (err) {
     console.error('[yt-dlp] 更新失败:', err)
+    cleanupTmp(tmpPath)
     resolve(false)
   }
 }
