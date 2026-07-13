@@ -1,31 +1,32 @@
 <template>
-  <div class="card p-4">
-    <div class="flex gap-3">
-      <div class="relative flex-1">
-        <Link class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-        <input
-          v-model="localUrl"
-          type="url"
-          placeholder="粘贴视频链接，例如 https://twitter.com/xxx/status/..."
-          class="input-field pl-10 pr-4 text-sm"
-          @keydown.enter="handleSubmit"
-          :disabled="store.isParsing"
-        />
-      </div>
-      <button
-        class="btn-primary shrink-0"
+  <div class="url-input-card">
+    <div class="url-input-row">
+      <t-input
+        v-model="localUrl"
+        type="url"
+        placeholder="粘贴视频链接，例如 https://twitter.com/xxx/status/..."
+        :prefix-icon="LinkIcon"
+        size="large"
+        class="url-input-field"
+        @enter="handleSubmit"
+        :disabled="store.isParsing"
+      />
+      <t-button
+        theme="primary"
+        size="large"
+        class="url-input-submit"
         @click="handleSubmit"
         :disabled="!store.isValidUrl || store.isParsing"
       >
         {{ store.isParsing ? '解析中...' : '解析' }}
-      </button>
+      </t-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Link } from 'lucide-vue-next'
+import { LinkIcon } from 'tdesign-icons-vue-next'
 import { useDownloadStore } from '../stores/download'
 
 const store = useDownloadStore()
@@ -41,3 +42,22 @@ function handleSubmit() {
   }
 }
 </script>
+
+<style scoped>
+.url-input-card {
+  background-color: var(--td-bg-color-container);
+  border: 1px solid var(--td-component-border);
+  border-radius: var(--td-radius-medium, 9px);
+  padding: 16px;
+}
+.url-input-row {
+  display: flex;
+  gap: 12px;
+}
+.url-input-field {
+  flex: 1;
+}
+.url-input-submit {
+  flex-shrink: 0;
+}
+</style>

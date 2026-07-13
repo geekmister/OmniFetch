@@ -1,55 +1,133 @@
 <template>
-  <div class="card p-5 space-y-4">
-    <!-- 进度信息 -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div v-if="store.downloadComplete" class="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center">
-          <Check class="w-3 h-3 text-success" />
+  <t-card class="progress-card" :bordered="true">
+    <div class="progress-content">
+      <!-- 进度信息 -->
+      <div class="progress-header">
+        <div class="progress-status">
+          <check-circle-icon v-if="store.downloadComplete" class="status-icon status-success" />
+          <pause-circle-icon v-else-if="store.isPaused" class="status-icon status-warning" />
+          <loading-icon v-else class="status-icon status-active" />
+          <span
+            class="progress-status-text"
+            :class="store.isPaused && !store.downloadComplete ? 'text-warning' : ''"
+          >
+            {{ store.downloadComplete ? '下载完成' : store.isPaused ? '已暂停' : '正在下载...' }}
+          </span>
         </div>
-        <div v-else-if="store.isPaused" class="w-5 h-5 rounded-full bg-warning/20 flex items-center justify-center">
-          <Pause class="w-3 h-3 text-warning" />
-        </div>
-        <div v-else class="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center">
-          <Loader2 class="w-3 h-3 text-accent animate-spin" />
-        </div>
-        <span class="text-sm font-medium" :class="store.downloadComplete ? 'text-text-primary' : store.isPaused ? 'text-warning' : 'text-text-primary'">
-          {{ store.downloadComplete ? '下载完成' : store.isPaused ? '已暂停' : '正在下载...' }}
+        <span class="progress-percent">{{ Math.round(store.progress) }}%</span>
+      </div>
+
+      <!-- 进度条 -->
+      <t-progress
+        theme="line"
+        :percentage="Math.round(store.progress)"
+        :status="store.downloadComplete ? 'success' : store.isPaused ? 'warning' : 'active'"
+        class="progress-bar"
+      />
+
+      <!-- 速度 & ETA -->
+      <div v-if="!store.downloadComplete" class="progress-meta">
+        <span class="progress-meta-item">
+          <chart-icon class="meta-icon" />
+          {{ store.speed || '--' }}
+        </span>
+        <span class="progress-meta-item">
+          <time-icon class="meta-icon" />
+          {{ store.eta ? `剩余 ${store.eta}` : '--' }}
         </span>
       </div>
-      <span class="text-sm font-mono text-text-secondary">{{ Math.round(store.progress) }}%</span>
-    </div>
 
-    <!-- 进度条 -->
-    <div class="relative h-2 rounded-full bg-surface overflow-hidden">
-      <div
-        class="absolute inset-y-0 left-0 rounded-full transition-all duration-300 ease-out"
-        :class="store.downloadComplete ? 'bg-success' : store.isPaused ? 'bg-warning' : 'bg-accent'"
-        :style="{ width: `${store.progress}%` }"
-      />
+      <!-- 完成提示 -->
+      <div v-if="store.downloadComplete" class="progress-done">
+        <p class="progress-done-text">文件已保存到您选择的位置</p>
+      </div>
     </div>
-
-    <!-- 速度 & ETA -->
-    <div v-if="!store.downloadComplete" class="flex items-center justify-between text-2xs text-text-muted">
-      <span class="flex items-center gap-1">
-        <Gauge class="w-3 h-3" />
-        {{ store.speed || '--' }}
-      </span>
-      <span class="flex items-center gap-1">
-        <Timer class="w-3 h-3" />
-        {{ store.eta ? `剩余 ${store.eta}` : '--' }}
-      </span>
-    </div>
-
-    <!-- 完成提示 -->
-    <div v-if="store.downloadComplete" class="pt-2 border-t border-surface-border">
-      <p class="text-xs text-text-secondary">文件已保存到您选择的位置</p>
-    </div>
-  </div>
+  </t-card>
 </template>
 
 <script setup lang="ts">
-import { Check, Loader2, Gauge, Timer, Pause } from 'lucide-vue-next'
+import {
+  CheckCircleIcon,
+  PauseCircleIcon,
+  LoadingIcon,
+  ChartIcon,
+  TimeIcon,
+} from 'tdesign-icons-vue-next'
 import { useDownloadStore } from '../stores/download'
 
 const store = useDownloadStore()
 </script>
+
+<style scoped>
+.progress-card {
+  padding: 20px;
+}
+.progress-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.progress-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-icon {
+  width: 20px;
+  height: 20px;
+}
+.status-success {
+  color: var(--td-success-color);
+}
+.status-warning {
+  color: var(--td-warning-color);
+}
+.status-active {
+  color: var(--td-brand-color);
+}
+.progress-status-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--td-text-color-primary);
+}
+.text-warning {
+  color: var(--td-warning-color);
+}
+.progress-percent {
+  font-size: 14px;
+  font-family: var(--td-font-family-mono, monospace);
+  color: var(--td-text-color-secondary);
+}
+.progress-bar {
+  width: 100%;
+}
+.progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--td-text-color-placeholder);
+}
+.progress-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.meta-icon {
+  width: 12px;
+  height: 12px;
+}
+.progress-done {
+  padding-top: 8px;
+  border-top: 1px solid var(--td-component-border);
+}
+.progress-done-text {
+  font-size: 12px;
+  color: var(--td-text-color-secondary);
+}
+</style>
