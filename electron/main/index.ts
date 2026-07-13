@@ -1,23 +1,19 @@
 import { app, BrowserWindow, ipcMain, dialog, Notification, nativeImage } from 'electron'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { getVideoInfo, startDownload, pauseDownload, resumeDownload, cancelDownload, getCurrentDownload } from './downloader'
-import { checkAndUpdateYtdlp } from './ytdlp-updater'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+import { join } from 'path'
+import { getVideoInfo, startDownload, pauseDownload, resumeDownload, cancelDownload, getCurrentDownload } from '../downloader'
+import { checkAndUpdateYtdlp } from '../ytdlp-updater'
 
 let mainWindow: BrowserWindow | null = null
 
 function createWindow() {
-  // preload.cjs 是纯 CommonJS 文件，绕过 ESM 编译问题
-  const preloadPath = join(__dirname, 'preload.cjs')
+  // electron-vite 编译 preload 为 CJS，输出至 out/preload/index.js
+  const preloadPath = join(__dirname, '../preload/index.js')
 
   // 开发模式设置应用图标
-  const iconPath = join(__dirname, '..', 'build', process.platform === 'darwin' ? 'icon.icns' : 'icon.png')
+  const iconPath = join(__dirname, '../../build', process.platform === 'darwin' ? 'icon.icns' : 'icon.png')
   if (!app.isPackaged) {
     // macOS Dock 图标用 PNG 更稳定
-    const dockIcon = nativeImage.createFromPath(join(__dirname, '..', 'build', 'icon.png'))
+    const dockIcon = nativeImage.createFromPath(join(__dirname, '../../build', 'icon.png'))
     if (!dockIcon.isEmpty()) {
       app.dock?.setIcon(dockIcon.resize({ width: 256, height: 256 }))
     }
@@ -49,7 +45,7 @@ function createWindow() {
     mainWindow.loadURL(devServerUrl)
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
-    mainWindow.loadFile(join(__dirname, '../dist/index.html'))
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
 

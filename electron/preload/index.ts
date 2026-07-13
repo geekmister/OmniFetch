@@ -5,6 +5,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectOutputPath: (defaultName: string) => ipcRenderer.invoke('select-output-path', defaultName),
   startDownload: (url: string, formatId: string, outputPath: string) =>
     ipcRenderer.invoke('start-download', url, formatId, outputPath),
+  pauseDownload: () => ipcRenderer.invoke('pause-download'),
+  resumeDownload: () => ipcRenderer.invoke('resume-download'),
+  cancelDownload: () => ipcRenderer.invoke('cancel-download'),
   onDownloadProgress: (callback: (progress: any) => void) => {
     ipcRenderer.on('download-progress', (_event, progress) => callback(progress))
   },

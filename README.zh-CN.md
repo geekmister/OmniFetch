@@ -124,8 +124,10 @@ OmniFetch/
 ├── electron/
 │   ├── bin-resolver.ts
 │   ├── downloader.ts
-│   ├── main.ts
-│   ├── preload.cjs
+│   ├── main/
+│   │   └── index.ts
+│   ├── preload/
+│   │   └── index.ts
 │   └── ytdlp-updater.ts
 ├── python-script/
 ├── scripts/
@@ -141,7 +143,7 @@ OmniFetch/
 │   └── TechnicalSolution-v1.0.0(MVP).md
 ├── package.json
 ├── tsconfig.json
-├── vite.config.ts
+├── electron.vite.config.ts
 └── README.zh-CN.md
 ```
 

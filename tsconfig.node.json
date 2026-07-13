@@ -6,5 +6,5 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["vite.config.ts", "electron/**/*.ts"]
+  "include": ["electron.vite.config.ts", "electron/downloader.ts", "electron/bin-resolver.ts", "electron/ytdlp-updater.ts"]
 }
