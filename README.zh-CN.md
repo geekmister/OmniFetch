@@ -92,27 +92,31 @@
 
 ## 使用说明
 
-1. 打开 OmniFetch。
-2. 将视频链接粘贴到 URL 输入框。
-3. 点击 **Parse** 解析视频信息和可选格式。
-4. 从列表中选择下载格式。
-5. 选择输出文件夹。
-6. 点击 **Download** 开始下载。
-7. 界面会显示实时进度、下载速度和剩余时间。
-8. 需要时可点击 **Pause**、**Resume** 或 **Cancel**。
+1. 打开 OmniFetch；
+2. 将视频链接粘贴到 URL 输入框；
+3. 点击 **解析** 解析视频信息和可选格式；
+4. 从列表中选择下载格式；
+5. 选择输出文件夹；
+6. 点击 **下载** 开始下载；
+7. 界面会显示实时进度、下载速度和剩余时间；
+8. 需要时可点击 **暂停**、**恢复** 或 **取消**；
 
 > 取消下载时，OmniFetch 会提示是否删除已下载的临时文件。
 
 ## 运行时二进制支持
 
-OmniFetch 自带运行时二进制文件，存放于 `bin/`：
+OmniFetch 自带运行时二进制文件，按 **平台-架构** 分目录存放于 `bin/`：
 
-- `bin/yt-dlp`
-- `bin/ffmpeg`
+- `bin/win32-x64/yt-dlp.exe` + `ffmpeg.exe`
+- `bin/darwin-arm64/yt-dlp` + `ffmpeg`（Apple Silicon）
+- `bin/darwin-x64/yt-dlp` + `ffmpeg`（Intel）
+- `bin/linux-x64/yt-dlp` + `ffmpeg`
+
+> ⚠️ 二进制是平台相关的，**必须在目标平台执行 `npm run download:bins`** 以获取对应版本。跨平台直接拷贝会导致不兼容（如 macOS 的 Mach-O 二进制无法在 Windows 上运行）。
 
 这些文件会在打包时作为额外资源一起包含。若从源码运行，请先执行 `npm run download:bins`，以确保本地运行环境可用。
 
-Electron 主进程通过 `electron/bin-resolver.ts` 解析内置二进制文件，若本地环境没有匹配版本，则回退到系统 `PATH`。
+Electron 主进程通过 `electron/bin-resolver.ts` 解析内置二进制文件（含魔数校验，确保平台匹配），若本地环境没有匹配版本，则回退到系统 `PATH` 中的 `yt-dlp` / `ffmpeg`；若两者均缺失，应用会给出明确报错与修复指引（提示运行 `npm run download:bins`）。
 
 ## 项目结构
 

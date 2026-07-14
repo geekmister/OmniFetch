@@ -135,16 +135,17 @@ function downloadFile(url, destPath) {
 async function main() {
   console.log('🔧 OmniFetch - 下载运行时二进制文件')
   console.log(`   平台: ${PLATFORM} / ${ARCH}`)
-  console.log(`   目标: ${BIN_DIR}\n`)
+  const TARGET_DIR = join(BIN_DIR, `${PLATFORM}-${ARCH}`)
+  console.log(`   目标: ${TARGET_DIR}\n`)
 
-  // 创建 bin 目录
-  if (!existsSync(BIN_DIR)) {
-    mkdirSync(BIN_DIR, { recursive: true })
+  // 创建 bin/<platform>-<arch> 目录
+  if (!existsSync(TARGET_DIR)) {
+    mkdirSync(TARGET_DIR, { recursive: true })
   }
 
   // 1. 下载 yt-dlp
   const ytdlpName = getYtdlpName()
-  const ytdlpPath = join(BIN_DIR, ytdlpName)
+  const ytdlpPath = join(TARGET_DIR, ytdlpName)
   const ytdlpUrl = getYtdlpUrl()
 
   if (existsSync(ytdlpPath)) {
@@ -165,7 +166,7 @@ async function main() {
 
   // 2. 下载 ffmpeg
   const ffmpegName = getFfmpegName()
-  const ffmpegPath = join(BIN_DIR, ffmpegName)
+  const ffmpegPath = join(TARGET_DIR, ffmpegName)
   const ffmpegUrl = getFfmpegUrl()
 
   if (existsSync(ffmpegPath)) {
@@ -173,25 +174,61 @@ async function main() {
   } else {
     console.log(`📦 下载 ffmpeg...`)
     try {
-      // macOS: 直接下载静态二进制
       if (PLATFORM === 'darwin') {
-        const zipPath = join(BIN_DIR, 'ffmpeg.zip')
+        // macOS: 直接下载静态二进制 zip
+        const zipPath = join(TARGET_DIR, 'ffmpeg.zip')
         await downloadFile(ffmpegUrl, zipPath)
         console.log(`   解压中...`)
-        execSync(`unzip -o "${zipPath}" -d "${BIN_DIR}"`, { stdio: 'pipe' })
+        execSync(`unzip -o "${zipPath}" -d "${TARGET_DIR}"`, { stdio: 'pipe' })
         unlinkSync(zipPath)
         if (PLATFORM !== 'win32') {
           chmodSync(ffmpegPath, 0o755)
         }
+      } else if (PLATFORM === 'win32') {
+        // Windows: 下载 zip，解压取 bin/ffmpeg.exe
+        const zipPath = join(TARGET_DIR, 'ffmpeg.zip')
+        await downloadFile(ffmpegUrl, zipPath)
+        console.log(`   解压中...`)
+        const extractDir = join(TARGET_DIR, 'ffmpeg-extract')
+        if (existsSync(extractDir)) {
+          execSync(`rmdir /s /q "${extractDir}"`, { stdio: 'pipe' })
+        }
+        // 使用系统 tar 解压（Windows 10+ 自带）
+        execSync(`tar -xf "${zipPath}" -C "${TARGET_DIR}"`, { stdio: 'pipe' })
+        // BtbN 压缩包结构: ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe
+        const extracted = join(TARGET_DIR, 'ffmpeg-master-latest-win64-gpl', 'bin', 'ffmpeg.exe')
+        if (existsSync(extracted)) {
+          if (existsSync(ffmpegPath)) unlinkSync(ffmpegPath)
+          renameSync(extracted, ffmpegPath)
+        }
+        unlinkSync(zipPath)
+        // 清理多余解压目录
+        try {
+          execSync(`rmdir /s /q "${join(TARGET_DIR, 'ffmpeg-master-latest-win64-gpl')}"`, { stdio: 'pipe' })
+        } catch {}
       } else {
-        // Linux/Windows: 需要解压 tar.xz 或 zip
-        console.log(`   ⚠️ 当前平台暂不支持自动下载 ffmpeg`)
-        console.log(`   💡 请手动安装: brew install ffmpeg (macOS) / apt install ffmpeg (Linux)`)
+        // Linux: 下载 tar.xz，解压取 ffmpeg 静态二进制
+        const xzPath = join(TARGET_DIR, 'ffmpeg.tar.xz')
+        await downloadFile(ffmpegUrl, xzPath)
+        console.log(`   解压中...`)
+        execSync(`tar -xf "${xzPath}" -C "${TARGET_DIR}"`, { stdio: 'pipe' })
+        unlinkSync(xzPath)
+        // johnvansickle 压缩包结构: ffmpeg-*-static/ffmpeg
+        const staticDir = (await import('fs')).readdirSync(TARGET_DIR).find((d) => d.includes('static'))
+        if (staticDir) {
+          const extracted = join(TARGET_DIR, staticDir, 'ffmpeg')
+          if (existsSync(extracted)) {
+            if (existsSync(ffmpegPath)) unlinkSync(ffmpegPath)
+            renameSync(extracted, ffmpegPath)
+          }
+          execSync(`rmdir /s /q "${join(TARGET_DIR, staticDir)}"`, { stdio: 'pipe' })
+        }
+        chmodSync(ffmpegPath, 0o755)
       }
       console.log(`   ✅ ffmpeg 就绪: ${ffmpegPath}`)
     } catch (err) {
       console.error(`   ❌ ffmpeg 下载失败: ${err.message}`)
-      console.log(`   💡 请手动安装: brew install ffmpeg`)
+      console.log(`   💡 请手动安装: brew install ffmpeg (macOS) / apt install ffmpeg (Linux)`)
     }
   }
 

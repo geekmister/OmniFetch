@@ -2,6 +2,7 @@ import { spawn, ChildProcess, execSync } from 'child_process'
 import { existsSync, mkdirSync, unlinkSync } from 'fs'
 import { dirname } from 'path'
 import { getYtdlpPath, getFfmpegPath } from './bin-resolver'
+import { AppErrorCode, AppError, makeError } from '../src/shared/error-codes'
 
 export interface VideoFormat {
   formatId: string
@@ -194,13 +195,31 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
       stderr += data.toString()
     })
 
-    ytdlp.on('error', (err) => {
-      reject(new Error(`无法启动 yt-dlp: ${err.message}。请确保已安装 yt-dlp。`))
+    ytdlp.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'ENOENT') {
+        reject(makeError(AppErrorCode.YTDLP_NOT_FOUND))
+      } else {
+        reject(makeError(AppErrorCode.BINARY_SPAWN_FAILED, err.message))
+      }
     })
 
     ytdlp.on('close', (code) => {
       if (code !== 0) {
-        reject(new Error(`yt-dlp 解析失败 (退出码 ${code}): ${stderr.trim() || '未知错误'}`))
+        const detail = stderr.trim() || '未知错误'
+        const lower = detail.toLowerCase()
+        if (lower.includes('proxy') || lower.includes('tunnel')) {
+          reject(makeError(AppErrorCode.PROXY_ERROR, detail))
+        } else if (
+          lower.includes('unable to download') ||
+          lower.includes('connection') ||
+          lower.includes('network') ||
+          lower.includes('timeout') ||
+          lower.includes('http error')
+        ) {
+          reject(makeError(AppErrorCode.NETWORK_ERROR, detail))
+        } else {
+          reject(makeError(AppErrorCode.PARSE_FAILED, detail))
+        }
         return
       }
 
@@ -336,9 +355,13 @@ export async function startDownload(
       }
     })
 
-    ytdlp.on('error', (err) => {
+    ytdlp.on('error', (err: NodeJS.ErrnoException) => {
       currentDownload.process = null
-      reject(new Error(`无法启动 yt-dlp: ${err.message}。请确保已安装 yt-dlp。`))
+      if (err.code === 'ENOENT') {
+        reject(makeError(AppErrorCode.YTDLP_NOT_FOUND))
+      } else {
+        reject(makeError(AppErrorCode.BINARY_SPAWN_FAILED, err.message))
+      }
     })
 
     ytdlp.on('close', (code) => {
@@ -350,7 +373,21 @@ export async function startDownload(
       } else if (code === 0) {
         resolve({ success: true, path: outputPath })
       } else {
-        reject(new Error(`下载失败 (退出码 ${code}): ${stderr.trim() || '未知错误'}`))
+        const detail = stderr.trim() || '未知错误'
+        const lower = detail.toLowerCase()
+        if (lower.includes('proxy') || lower.includes('tunnel')) {
+          reject(makeError(AppErrorCode.PROXY_ERROR, detail))
+        } else if (
+          lower.includes('unable to download') ||
+          lower.includes('connection') ||
+          lower.includes('network') ||
+          lower.includes('timeout') ||
+          lower.includes('http error')
+        ) {
+          reject(makeError(AppErrorCode.NETWORK_ERROR, detail))
+        } else {
+          reject(makeError(AppErrorCode.DOWNLOAD_FAILED, detail))
+        }
       }
     })
   })

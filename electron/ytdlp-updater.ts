@@ -6,7 +6,8 @@ import { spawn } from 'child_process'
 import { createWriteStream, existsSync, unlinkSync, chmodSync, renameSync, readFileSync, writeFileSync } from 'fs'
 import { get } from 'https'
 import { join } from 'path'
-import { getYtdlpPath, getYtdlpDir } from './bin-resolver'
+import { getYtdlpPath, getYtdlpDir, getPlatformArchKey, validateBinaries } from './bin-resolver'
+import { AppErrorCode } from '../src/shared/error-codes'
 
 const isWin = process.platform === 'win32'
 const isMac = process.platform === 'darwin'
@@ -131,6 +132,15 @@ export async function checkAndUpdateYtdlp(): Promise<void> {
     console.log('[yt-dlp] 内置二进制不存在，跳过自动更新')
     return
   }
+
+  // 平台不匹配（如跨平台拷贝的错误二进制），跳过自更新避免覆盖
+  const { ytdlp } = validateBinaries()
+  if (ytdlp && ytdlp.code === AppErrorCode.BINARY_WRONG_PLATFORM) {
+    console.log('[yt-dlp] 内置二进制平台不匹配，跳过自动更新，请重新运行 npm run download:bins')
+    return
+  }
+
+  console.log(`[yt-dlp] 当前平台-架构: ${getPlatformArchKey()}`)
 
   try {
     const currentVersion = await getCurrentVersion(ytdlpPath)

@@ -69,14 +69,18 @@ Features
 
 ## Runtime Binary Support
 
-OmniFetch ships with bundled runtime binaries in `bin/`:
+OmniFetch ships with bundled runtime binaries, organized by **platform-arch** under `bin/`:
 
-- `bin/yt-dlp`
-- `bin/ffmpeg`
+- `bin/win32-x64/yt-dlp.exe` + `ffmpeg.exe`
+- `bin/darwin-arm64/yt-dlp` + `ffmpeg` (Apple Silicon)
+- `bin/darwin-x64/yt-dlp` + `ffmpeg` (Intel)
+- `bin/linux-x64/yt-dlp` + `ffmpeg`
+
+> ⚠️ Binaries are platform-specific. You **must run `npm run download:bins` on the target platform** to fetch the matching build. Copying binaries across platforms causes incompatibility (e.g. a macOS Mach-O binary cannot run on Windows).
 
 These binaries are included as extra resources during packaging. If you run from source, execute `npm run download:bins` first to ensure the local runtime tools are available.
 
-The Electron main process resolves built-in binaries via `electron/bin-resolver.ts` and falls back to the system `PATH` if needed.
+The Electron main process resolves built-in binaries via `electron/bin-resolver.ts` (with magic-number validation to ensure platform match). If no matching built-in binary is found, it falls back to the system `PATH` for `yt-dlp` / `ffmpeg`. If both are missing, the app shows a clear error with a fix hint (run `npm run download:bins`).
 
 ## Project Structure
 

@@ -2,8 +2,21 @@ import { app, BrowserWindow, ipcMain, dialog, Notification, nativeImage } from '
 import { join } from 'path'
 import { getVideoInfo, startDownload, pauseDownload, resumeDownload, cancelDownload, getCurrentDownload } from '../downloader'
 import { checkAndUpdateYtdlp } from '../ytdlp-updater'
+import { validateBinaries } from '../bin-resolver'
+import { AppError, toAppError } from '../../src/shared/error-codes'
 
 let mainWindow: BrowserWindow | null = null
+
+// 启动预检结果缓存，供 IPC 复用，避免每次解析都做文件校验
+let binaryCheck: { ytdlp: AppError | null; ffmpeg: AppError | null } | null = null
+
+/**
+ * 将异常统一包装为结构化 IPC 返回
+ */
+function failResult(err: unknown) {
+  const e: AppError = toAppError(err)
+  return { success: false, code: e.code, message: e.message, hint: e.hint }
+}
 
 function createWindow() {
   // electron-vite 编译 preload，输出至 out/preload/index.mjs（package.json type=module）
@@ -50,6 +63,11 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // 启动预检二进制（缓存结果供 IPC 复用）
+  binaryCheck = validateBinaries()
+  if (binaryCheck.ytdlp || binaryCheck.ffmpeg) {
+    console.warn('[bin] 二进制预检异常:', binaryCheck.ytdlp?.code, binaryCheck.ffmpeg?.code)
+  }
   createWindow()
   // 后台静默检查 yt-dlp 更新（不阻塞窗口显示）
   checkAndUpdateYtdlp()
@@ -70,11 +88,15 @@ app.on('activate', () => {
 // ===== IPC Handlers =====
 
 ipcMain.handle('get-video-info', async (_event, url: string) => {
+  // 启动前预检：二进制缺失直接返回对应 code，避免进入 spawn 才报错
+  if (binaryCheck?.ytdlp) {
+    return failResult(binaryCheck.ytdlp)
+  }
   try {
     const info = await getVideoInfo(url)
     return { success: true, data: info }
   } catch (err: any) {
-    return { success: false, error: err.message }
+    return failResult(err)
   }
 })
 
@@ -95,6 +117,13 @@ ipcMain.handle('select-output-path', async (_event, defaultName: string) => {
 })
 
 ipcMain.handle('start-download', async (_event, url: string, formatId: string, outputPath: string) => {
+  // 启动前预检：二进制缺失直接返回对应 code
+  if (binaryCheck?.ytdlp) {
+    return failResult(binaryCheck.ytdlp)
+  }
+  if (binaryCheck?.ffmpeg) {
+    return failResult(binaryCheck.ffmpeg)
+  }
   try {
     const result = await startDownload(url, formatId, outputPath, (progress) => {
       mainWindow?.webContents.send('download-progress', progress)
@@ -108,7 +137,7 @@ ipcMain.handle('start-download', async (_event, url: string, formatId: string, o
     }
     return { success: true, data: result }
   } catch (err: any) {
-    return { success: false, error: err.message }
+    return failResult(err)
   }
 })
 

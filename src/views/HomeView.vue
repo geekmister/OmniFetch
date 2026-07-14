@@ -10,7 +10,13 @@
     <UrlInput />
 
     <!-- 解析错误 -->
-    <t-alert v-if="store.parseError" theme="error" :message="store.parseError" class="home-block" />
+    <t-alert
+      v-if="store.parseError"
+      theme="error"
+      :message="store.parseError"
+      :close-btn="false"
+      class="home-block"
+    />
 
     <!-- 加载中 -->
     <t-loading v-if="store.isParsing" :text="'正在解析视频信息...'" class="home-loading" />
@@ -22,7 +28,13 @@
     <DownloadProgress v-if="store.isDownloading || store.downloadComplete" />
 
     <!-- 下载错误 -->
-    <t-alert v-if="store.error" theme="error" :message="store.error" class="home-block" />
+    <t-alert
+      v-if="store.error"
+      theme="error"
+      :message="store.error"
+      :close-btn="false"
+      class="home-block"
+    />
 
     <!-- 下载按钮 -->
     <DownloadButton v-if="store.videoInfo && !store.isParsing" />

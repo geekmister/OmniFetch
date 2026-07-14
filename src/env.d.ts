@@ -6,13 +6,23 @@ declare module '*.vue' {
   export default component
 }
 
+interface IpcResult {
+  success: boolean
+  code?: string
+  message?: string
+  hint?: string
+  data?: any
+  cancelled?: boolean
+  deleted?: boolean
+}
+
 interface ElectronAPI {
-  getVideoInfo: (url: string) => Promise<{ success: boolean; data?: VideoInfo; error?: string }>
+  getVideoInfo: (url: string) => Promise<IpcResult & { data?: VideoInfo }>
   selectOutputPath: (defaultName: string) => Promise<string | null>
-  startDownload: (url: string, formatId: string, outputPath: string) => Promise<{ success: boolean; data?: any; error?: string }>
-  pauseDownload: () => Promise<{ success: boolean }>
-  resumeDownload: () => Promise<{ success: boolean }>
-  cancelDownload: () => Promise<{ success: boolean; deleted?: boolean; cancelled?: boolean }>
+  startDownload: (url: string, formatId: string, outputPath: string) => Promise<IpcResult & { data?: any }>
+  pauseDownload: () => Promise<IpcResult>
+  resumeDownload: () => Promise<IpcResult>
+  cancelDownload: () => Promise<IpcResult>
   onDownloadProgress: (callback: (progress: DownloadProgress) => void) => void
   removeDownloadProgressListener: () => void
 }

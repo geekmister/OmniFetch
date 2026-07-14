@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { AppErrorCode } from '../shared/error-codes'
 
 export const useDownloadStore = defineStore('download', () => {
   // 状态
@@ -69,7 +70,8 @@ export const useDownloadStore = defineStore('download', () => {
         videoInfo.value = result.data
         selectedFormat.value = result.data.formats[0]
       } else {
-        parseError.value = result.error || '解析失败，请检查 URL 是否正确'
+        // 按 code 展示精准提示（含 hint 修复指引）
+        parseError.value = formatError(result)
       }
     } catch (err: any) {
       parseError.value = err.message || '解析请求失败'
@@ -125,7 +127,7 @@ export const useDownloadStore = defineStore('download', () => {
         progress.value = 100
         downloadComplete.value = true
       } else {
-        error.value = result.error || '下载失败'
+        error.value = formatError(result)
       }
     } catch (err: any) {
       // 用户主动取消时不显示错误
@@ -188,6 +190,17 @@ export const useDownloadStore = defineStore('download', () => {
       isDownloading.value = false
       isPaused.value = false
     }
+  }
+
+  /**
+   * 将 IPC 返回的结构化错误格式化为用户可读提示
+   * 优先展示 message，若有 hint 则追加可操作建议
+   */
+  function formatError(result: { code?: string; message?: string; hint?: string } | null): string {
+    if (!result) return '操作失败'
+    const msg = result.message || '操作失败'
+    if (result.hint) return `${msg}。${result.hint}`
+    return msg
   }
 
   function reset() {
