@@ -125,6 +125,32 @@ Electron 主进程通过 `electron/bin-resolver.ts` 解析内置二进制文件�
 - 若当前平台-架构的预置二进制已是最新（与 `manifest.json` 一致），则**跳过联网更新**，直接使用预置文件；
 - 若检测到上游有更新，会在界面顶部以警告提示用户，**并明确告知联网下载失败率较高、建议优先使用预置二进制**；是否联网更新由用户自行决定。
 
+#### 各平台二进制下载链接
+
+> 以下为 `npm run download:bins` 实际使用的 latest 下载源。手动预置时，请将文件按 `bin/<platform>-<arch>/` 目录存放，并把实际版本号填入 `bin/manifest.json`。
+
+**yt-dlp**
+
+| 平台-架构 | 下载链接 | 存放文件名 |
+|----------|----------|------------|
+| `win32-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe` | `bin/win32-x64/yt-dlp.exe` |
+| `darwin-arm64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-arm64/yt-dlp` |
+| `darwin-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-x64/yt-dlp` |
+| `linux-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-x64/yt-dlp` |
+
+> 注：yt-dlp 的 macOS 版为通用二进制（universal），`darwin-arm64` 与 `darwin-x64` 共用同一链接。
+
+**ffmpeg**
+
+| 平台-架构 | 下载链接 | 提取目标 |
+|----------|----------|----------|
+| `win32-x64` | `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip` | 解压取 `bin/ffmpeg.exe` → `bin/win32-x64/ffmpeg.exe` |
+| `darwin-arm64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip` | 解压取 `ffmpeg` → `bin/darwin-arm64/ffmpeg` |
+| `darwin-x64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip` | 解压取 `ffmpeg` → `bin/darwin-x64/ffmpeg` |
+| `linux-x64` | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz` | 解压取 `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg` |
+
+> 注：Windows / Linux 的 ffmpeg 为压缩包，需解压后提取可执行文件；macOS 为裸二进制 zip。
+
 ## 项目结构
 
 ```text

@@ -89,6 +89,32 @@ The app **ships prebuilt binaries for all platforms** in the installer, and `bin
 - If the bundled binary for the current platform-arch is already up to date (matches `manifest.json`), the app **skips the online update** and uses the bundled file directly.
 - If an upstream update is detected, a warning is shown at the top of the UI, **explicitly noting that online downloads have a high failure rate and recommending the bundled binaries**; whether to update online is left to the user.
 
+#### Binary download links per platform
+
+> These are the exact `latest` sources used by `npm run download:bins`. When bundling manually, place files under `bin/<platform>-<arch>/` and record the actual version in `bin/manifest.json`.
+
+**yt-dlp**
+
+| Platform-arch | Download URL | Stored as |
+|---------------|--------------|-----------|
+| `win32-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe` | `bin/win32-x64/yt-dlp.exe` |
+| `darwin-arm64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-arm64/yt-dlp` |
+| `darwin-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-x64/yt-dlp` |
+| `linux-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-x64/yt-dlp` |
+
+> Note: the macOS yt-dlp build is a universal binary, so `darwin-arm64` and `darwin-x64` share the same URL.
+
+**ffmpeg**
+
+| Platform-arch | Download URL | Extract to |
+|---------------|--------------|------------|
+| `win32-x64` | `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip` | extract `bin/ffmpeg.exe` → `bin/win32-x64/ffmpeg.exe` |
+| `darwin-arm64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip` | extract `ffmpeg` → `bin/darwin-arm64/ffmpeg` |
+| `darwin-x64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip` | extract `ffmpeg` → `bin/darwin-x64/ffmpeg` |
+| `linux-x64` | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz` | extract `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg` |
+
+> Note: Windows/Linux ffmpeg ships as an archive and must be extracted; macOS ships as a bare binary zip.
+
 ## Project Structure
 
 ```text
