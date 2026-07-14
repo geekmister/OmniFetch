@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Notification, nativeImage } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Notification, nativeImage, Menu } from 'electron'
 import { join } from 'path'
 import { getVideoInfo, startDownload, pauseDownload, resumeDownload, cancelDownload, getCurrentDownload } from '../downloader'
 import { checkBinaryUpdates, applyBinaryUpdates } from '../binary-updater'
@@ -45,6 +45,7 @@ function createWindow() {
       sandbox: false,
     },
     titleBarStyle: 'hiddenInset',
+    autoHideMenuBar: true,
     backgroundColor: '#0d1117',
     show: false,
   })
@@ -53,7 +54,8 @@ function createWindow() {
     mainWindow?.show()
   })
 
-  const devServerUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173'
+  // electron-vite 在开发模式下注入 ELECTRON_RENDERER_URL（含实际端口，如 5174）
+  const devServerUrl = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5173'
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL(devServerUrl)
     mainWindow.webContents.openDevTools({ mode: 'detach' })
@@ -63,6 +65,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // 移除默认菜单栏
+  Menu.setApplicationMenu(null)
   // 启动预检二进制（缓存结果供 IPC 复用）
   binaryCheck = validateBinaries()
   if (binaryCheck.ytdlp || binaryCheck.ffmpeg) {
