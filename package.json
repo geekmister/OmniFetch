@@ -6,7 +6,7 @@
   "description": "OmniFetch - 通用视频下载器",
   "main": "out/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
+    "dev": "node scripts/dev.mjs",
     "download:bins": "node scripts/download-bins.mjs",
     "sync:bin-versions": "node scripts/sync-bin-versions.mjs",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
