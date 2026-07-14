@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "download:bins": "node scripts/download-bins.mjs",
+    "sync:bin-versions": "node scripts/sync-bin-versions.mjs",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "build": "electron-vite build",
     "electron:dev": "cross-env NODE_ENV=development electron-vite dev",

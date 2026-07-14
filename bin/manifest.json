@@ -2,9 +2,22 @@
   "comment": "OmniFetch 预置二进制清单。由 npm run download:bins 自动生成/更新。记录各平台-架构内置二进制的版本，用于启动时判断是否需要联网更新。",
   "generatedAt": "2026-07-14",
   "binaries": {
-    "win32-x64": { "yt-dlp": "2024.01.01", "ffmpeg": "master-latest" },
-    "darwin-arm64": { "yt-dlp": "2024.01.01", "ffmpeg": "7.0.2" },
-    "darwin-x64": { "yt-dlp": "2024.01.01", "ffmpeg": "7.0.2" },
-    "linux-x64": { "yt-dlp": "2024.01.01", "ffmpeg": "master-latest" }
+    "win32-x64": {
+      "yt-dlp": "2026.07.04",
+      "ffmpeg": "N-20260713"
+    },
+    "darwin-arm64": {
+      "yt-dlp": "2024.01.01",
+      "ffmpeg": "7.0.2"
+    },
+    "darwin-x64": {
+      "yt-dlp": "2024.01.01",
+      "ffmpeg": "7.0.2"
+    },
+    "linux-x64": {
+      "yt-dlp": "2024.01.01",
+      "ffmpeg": "master-latest"
+    },
+    "linux-arm64": {}
   }
 }
