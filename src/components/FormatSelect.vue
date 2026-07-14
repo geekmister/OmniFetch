@@ -36,6 +36,7 @@
       <label class="format-label">选择格式</label>
       <t-radio-group
         :value="store.selectedFormat?.formatId"
+        direction="vertical"
         class="format-list"
         @change="(val: string) => onSelect(val)"
       >
