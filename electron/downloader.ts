@@ -75,7 +75,7 @@ let isPaused = false
  * 不可用时回退到 ntdll!NtSuspendProcess / NtResumeProcess P/Invoke。
  */
 const SUSPEND_SCRIPT = `
-param([int]$Pid, [string]$Action)
+param([int]$ProcessId, [string]$Action)
 $ErrorActionPreference = 'SilentlyContinue'
 Add-Type -TypeDefinition @'
 using System;
@@ -97,7 +97,7 @@ function Resume-Tree($id) {
   }
   Get-CimInstance Win32_Process -Filter "ParentProcessId = $id" | ForEach-Object { Resume-Tree $_.ProcessId }
 }
-if ($Action -eq 'suspend') { Suspend-Tree $Pid } else { Resume-Tree $Pid }
+if ($Action -eq 'suspend') { Suspend-Tree $ProcessId } else { Resume-Tree $ProcessId }
 `
 
 /**
@@ -110,7 +110,7 @@ function runProcessTreeScript(pid: number, action: 'suspend' | 'resume'): void {
   try {
     execFileSync(
       'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', tmp, '-Pid', String(pid), '-Action', action],
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', tmp, '-ProcessId', String(pid), '-Action', action],
       { windowsHide: true, timeout: 8000 }
     )
   } finally {
