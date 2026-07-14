@@ -78,6 +78,11 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+.app-main::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Electron */
 }
 .app-footer {
   flex-shrink: 0;
