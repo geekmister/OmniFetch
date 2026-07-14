@@ -6,6 +6,20 @@
       <p class="home-subtitle">粘贴视频链接，解析后可选择格式下载</p>
     </div>
 
+    <!-- 使用前须知：本地网络需可访问视频站点（解析/下载前告知） -->
+    <t-alert
+      v-if="showNetworkHint"
+      theme="info"
+      :close-btn="true"
+      class="home-block"
+      @close="showNetworkHint = false"
+    >
+      <template #title>使用前须知</template>
+      <p>
+        解析与下载依赖你本地网络可正常访问视频站点（如 B 站、YouTube 等）。若你的网络无法在浏览器中打开这些站点，OmniFetch 将无法解析视频信息，也无法下载视频。建议先确认可在浏览器中打开目标链接后再使用本工具。
+      </p>
+    </t-alert>
+
     <!-- 二进制更新提示（警告：联网下载失败率较高，建议用预置二进制） -->
     <t-alert
       v-if="store.binaryUpdateNotice && store.binaryUpdateNotice.length"
@@ -76,6 +90,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useDownloadStore } from '../stores/download'
 import UrlInput from '../components/UrlInput.vue'
 import FormatSelect from '../components/FormatSelect.vue'
@@ -83,6 +98,9 @@ import DownloadProgress from '../components/DownloadProgress.vue'
 import DownloadButton from '../components/DownloadButton.vue'
 
 const store = useDownloadStore()
+
+// 使用前须知：本地网络需可访问视频站点（解析/下载前告知，可关闭）
+const showNetworkHint = ref(true)
 </script>
 
 <style scoped>
