@@ -72,6 +72,8 @@ Features
 
 > When you cancel a download, OmniFetch prompts whether to delete the partial file.
 
+> ⚠️ **Network prerequisite**: Parsing and downloading require your local network to be able to access the target video site normally (e.g. Bilibili, YouTube). If your network cannot open these sites in a browser, OmniFetch will be unable to parse video info or download videos. We recommend confirming you can open the target link in a browser before using this tool.
+
 ## Runtime Binary Support
 
 OmniFetch ships with bundled runtime binaries, organized by **platform-arch** under `bin/`:
@@ -108,6 +110,17 @@ The app **ships prebuilt binaries for all platforms** in the installer, and `bin
 | `linux-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-x64/yt-dlp` |
 
 > Note: the macOS yt-dlp build is a universal binary, so `darwin-arm64` and `darwin-x64` share the same URL.
+
+#### Proxy Auto-Detection
+
+OmniFetch auto-detects a proxy and passes it to yt-dlp via `--proxy`, so you don't need to configure it manually for most setups. Detection priority:
+
+1. **Environment variables** (cross-platform): `HTTPS_PROXY` / `HTTP_PROXY` / `ALL_PROXY` (and lowercase variants).
+2. **Windows system proxy**: read from the `Internet Settings` registry (`HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings`, `ProxyEnable` / `ProxyServer`), supporting both protocol-specific (`http=...;https=...;socks=...`) and single-address formats.
+3. **macOS system proxy**: read via `scutil --proxy` (HTTPS / HTTP).
+4. **Linux system proxy**: read from **GNOME** `gsettings` (`org.gnome.system.proxy.{http,https,socks}`, manual mode) with a fallback to **KDE** `kreadconfig5` (`proxysettings`).
+
+If no proxy is detected, yt-dlp connects directly. For geo-blocked or restricted sites (e.g. `xhamster.desi`), enable your VPN/proxy and make sure it is exposed either as the system proxy or via the `HTTPS_PROXY` environment variable (e.g. `http://127.0.0.1:7890`), otherwise the connection may be reset (`curl: (35) Recv failure: Connection was reset`).
 
 **ffmpeg**
 

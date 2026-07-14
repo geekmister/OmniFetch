@@ -108,6 +108,8 @@
 
 > 取消下载时，OmniFetch 会提示是否删除已下载的临时文件。
 
+> ⚠️ **使用前须知**：解析与下载依赖你本地网络可正常访问视频站点（如 B 站、YouTube 等）。若你的网络无法在浏览器中打开这些站点，OmniFetch 将无法解析视频信息，也无法下载视频。建议先确认可在浏览器中打开目标链接后再使用本工具。
+
 ## 运行时二进制支持
 
 OmniFetch 自带运行时二进制文件，按 **平台-架构** 分目录存放于 `bin/`：
@@ -144,6 +146,17 @@ Electron 主进程通过 `electron/bin-resolver.ts` 解析内置二进制文件�
 | `linux-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-x64/yt-dlp` |
 
 > 注：yt-dlp 的 macOS 版为通用二进制（universal），`darwin-arm64` 与 `darwin-x64` 共用同一链接。
+
+#### 代理自动探测
+
+OmniFetch 会自动探测代理，并通过 `--proxy` 参数传递给 yt-dlp，多数情况下无需手动配置。探测优先级如下：
+
+1. **环境变量**（跨平台）：`HTTPS_PROXY` / `HTTP_PROXY` / `ALL_PROXY`（含小写变体）。
+2. **Windows 系统代理**：读取 `Internet Settings` 注册表（`HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings` 的 `ProxyEnable` / `ProxyServer`），支持「协议特定」（`http=...;https=...;socks=...`）与「单一地址」两种格式。
+3. **macOS 系统代理**：通过 `scutil --proxy` 读取（HTTPS / HTTP）。
+4. **Linux 系统代理**：优先读取 **GNOME** 的 `gsettings`（`org.gnome.system.proxy.{http,https,socks}`，仅 manual 模式），回退到 **KDE** 的 `kreadconfig5`（`proxysettings`）。
+
+若未探测到代理，yt-dlp 将直连网络。对于境外/受限站点（如 `xhamster.desi`），请开启 VPN/代理，并确保其已写入系统代理或 `HTTPS_PROXY` 环境变量（如 `http://127.0.0.1:7890`），否则可能出现连接被重置（`curl: (35) Recv failure: Connection was reset`）。
 
 **ffmpeg**
 
