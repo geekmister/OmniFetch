@@ -61,18 +61,28 @@ function createWindow() {
         show: false,
     });
 
-    mainWindow.once('ready-to-show', () => {
-        mainWindow?.show();
-    });
-
-    // electron-vite 在开发模式下注入 ELECTRON_RENDERER_URL（含实际端口，如 5174）
+    // electron-vite 在 dev 模式下会自动注入以下变量（无需手动设置 NODE_ENV）：
+    // - ELECTRON_RENDERER_URL：渲染进程 dev server 地址（含实际端口，如 5174）
+    // - NODE_ENV_ELECTRON_VITE：固定为 'development'
+    // 用这两个变量判断开发模式，确保 `npm run dev` 也能稳定打开 DevTools
+    const isDev =
+        process.env.NODE_ENV_ELECTRON_VITE === 'development' ||
+        !!process.env.ELECTRON_RENDERER_URL;
     const devServerUrl = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5173';
-    if (process.env.NODE_ENV === 'development') {
+    if (isDev) {
         mainWindow.loadURL(devServerUrl);
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
     } else {
         mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
     }
+
+    // 必须在窗口显示后再打开 DevTools：Windows 下父窗口未显示时打开 detach
+    // 模式独立窗口，DevTools 经常不显示，因此放到 ready-to-show（show 之后）触发
+    mainWindow.once('ready-to-show', () => {
+        mainWindow?.show();
+        if (isDev) {
+            mainWindow?.webContents.openDevTools({ mode: 'detach' });
+        }
+    });
 }
 
 app.whenReady().then(() => {
