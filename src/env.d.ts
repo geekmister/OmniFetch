@@ -49,6 +49,14 @@ interface VideoFormat {
   resolution: string
   ext: string
   filesize: number | null
+  filesizeApprox: number | null
+  tbr: number | null
+  vbr: number | null
+  abr: number | null
+  fps: number | null
+  vcodec: string
+  acodec: string
+  protocol: string
   note: string
 }
 

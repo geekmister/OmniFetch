@@ -9,6 +9,14 @@ export interface VideoFormat {
   resolution: string
   ext: string
   filesize: number | null
+  filesizeApprox: number | null
+  tbr: number | null
+  vbr: number | null
+  abr: number | null
+  fps: number | null
+  vcodec: string
+  acodec: string
+  protocol: string
   note: string
 }
 
@@ -386,6 +394,14 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
               resolution,
               ext: f.ext,
               filesize: f.filesize || null,
+              filesizeApprox: f.filesize_approx || null,
+              tbr: f.tbr ?? null,
+              vbr: f.vbr ?? null,
+              abr: f.abr ?? null,
+              fps: f.fps ?? null,
+              vcodec: f.vcodec || 'none',
+              acodec: f.acodec || 'none',
+              protocol: f.protocol || '',
               note: note.trim(),
             }
           })
