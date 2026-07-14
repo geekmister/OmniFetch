@@ -30,25 +30,25 @@ for size in sizes:
     path2x = os.path.join(ICONSET_DIR, f'icon_{size}x{size}@2x.png')
     resized2x.save(path2x)
 
-# 3. 生成 .icns (macOS)
-subprocess.run([
-    'iconutil', '--convert', 'icns',
-    '--output', os.path.join(BUILD_DIR, 'icon.icns'),
-    ICONSET_DIR
-], check=True)
-print(f'  ✓ build/icon.icns')
-
-shutil.rmtree(ICONSET_DIR)
+# 3. 生成 .icns (macOS，仅 macOS 可用 iconutil)
+if shutil.which('iconutil'):
+    subprocess.run([
+        'iconutil', '--convert', 'icns',
+        '--output', os.path.join(BUILD_DIR, 'icon.icns'),
+        ICONSET_DIR
+    ], check=True)
+    print(f'  ✓ build/icon.icns')
+    shutil.rmtree(ICONSET_DIR)
+else:
+    # 非 macOS 环境跳过 icns 生成，仅清理临时目录
+    shutil.rmtree(ICONSET_DIR)
 
 # 4. 生成 .ico (Windows)
+# 注意：PIL 的 ICO 保存需从大到小排列，否则只会写入首个尺寸
 ico_path = os.path.join(BUILD_DIR, 'icon.ico')
-# .ico 包含多个尺寸
-ico_sizes = [16, 32, 48, 64, 128, 256]
-ico_images = []
-for size in ico_sizes:
-    resized = img.resize((size, size), Image.LANCZOS)
-    ico_images.append(resized)
-ico_images[0].save(ico_path, format='ICO', sizes=[(s, s) for s in ico_sizes], append_images=ico_images[1:])
+ico_sizes = [256, 128, 64, 48, 32, 16]
+ico_images = [img.resize((s, s), Image.LANCZOS) for s in ico_sizes]
+ico_images[0].save(ico_path, format='ICO', append_images=ico_images[1:])
 print(f'  ✓ build/icon.ico')
 
 print('\n全部图标生成完成！')

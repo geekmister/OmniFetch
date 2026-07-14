@@ -6,8 +6,8 @@ import { checkAndUpdateYtdlp } from '../ytdlp-updater'
 let mainWindow: BrowserWindow | null = null
 
 function createWindow() {
-  // electron-vite 编译 preload 为 CJS，输出至 out/preload/index.js
-  const preloadPath = join(__dirname, '../preload/index.js')
+  // electron-vite 编译 preload，输出至 out/preload/index.mjs（package.json type=module）
+  const preloadPath = join(__dirname, '../preload/index.mjs')
 
   // 开发模式设置应用图标
   const iconPath = join(__dirname, '../../build', process.platform === 'darwin' ? 'icon.icns' : 'icon.png')
