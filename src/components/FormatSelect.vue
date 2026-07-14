@@ -5,12 +5,18 @@
       <div class="video-header-main">
         <!-- 缩略图 -->
         <div class="thumbnail">
-          <img
+          <t-image
             v-if="videoInfo.thumbnail"
             :src="videoInfo.thumbnail"
             class="thumbnail-img"
-            alt=""
-          />
+            fit="cover"
+          >
+            <template #error>
+              <div class="thumbnail-empty">
+                <film-icon class="thumbnail-icon" />
+              </div>
+            </template>
+          </t-image>
           <div v-else class="thumbnail-empty">
             <film-icon class="thumbnail-icon" />
           </div>
@@ -36,16 +42,16 @@
       <label class="format-label">选择格式</label>
       <t-radio-group
         :value="store.selectedFormat?.formatId"
-        direction="vertical"
-        class="format-list"
+        class="format-group"
         @change="(val: string) => onSelect(val)"
       >
-        <t-radio-button
-          v-for="fmt in videoInfo.formats"
-          :key="fmt.formatId"
-          :value="fmt.formatId"
-          class="format-item"
-        >
+        <t-space direction="vertical" :size="8" class="format-list">
+          <t-radio-button
+            v-for="fmt in videoInfo.formats"
+            :key="fmt.formatId"
+            :value="fmt.formatId"
+            class="format-item"
+          >
           <div class="format-item-inner">
             <!-- 分辨率标识 -->
             <t-tag
@@ -70,6 +76,7 @@
             </div>
           </div>
         </t-radio-button>
+        </t-space>
       </t-radio-group>
     </div>
   </t-card>
@@ -137,7 +144,17 @@ function sizeText(fmt: VideoFormat): string {
 .thumbnail-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  display: block;
+}
+.thumbnail-img :deep(.t-image),
+.thumbnail-img :deep(.t-image__wrapper) {
+  width: 100%;
+  height: 100%;
+}
+.thumbnail-img :deep(.t-image__wrapper) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .thumbnail-empty {
   width: 100%;
@@ -194,16 +211,12 @@ function sizeText(fmt: VideoFormat): string {
   letter-spacing: 0.05em;
   margin-bottom: 12px;
 }
-.format-list {
-  display: flex !important;
-  flex-direction: column;
+.format-group {
+  display: block;
   width: 100%;
-  /* max-height: 256px;
-  overflow-y: auto; */
-  padding-right: 4px;
 }
-.format-list :deep(.t-radio-group) {
-  display: flex !important;
+.format-list {
+  display: flex;
   flex-direction: column;
   width: 100%;
 }
@@ -211,13 +224,31 @@ function sizeText(fmt: VideoFormat): string {
   width: 100%;
   display: flex !important;
   flex: unset;
-  padding: 5px 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--td-component-border);
+  border-radius: var(--td-radius-medium, 9px);
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+/* 移除 radio-button 在分组中的连接分隔线 */
+.format-list :deep(.t-radio-button)::before {
+  display: none !important;
+}
+.format-list :deep(.t-radio-button:hover) {
+  border-color: var(--td-brand-color);
+  background-color: var(--td-bg-color-container-hover);
+}
+.format-list :deep(.t-radio-button.t-is-checked) {
+  border-color: var(--td-brand-color);
+  background-color: var(--td-brand-color-light);
+  box-shadow: inset 3px 0 0 var(--td-brand-color);
 }
 .format-list :deep(.t-radio-button__label) {
   flex: 1;
   display: flex !important;
   align-items: center;
   width: 100%;
+  padding: 10px 12px;
 }
 .format-item {
   width: 100%;
@@ -236,10 +267,15 @@ function sizeText(fmt: VideoFormat): string {
 .format-detail {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 .format-note {
+  display: block;
   font-size: 12px;
   color: var(--td-text-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .format-meta {
   flex-shrink: 0;
