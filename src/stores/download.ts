@@ -10,6 +10,8 @@ export const useDownloadStore = defineStore('download', () => {
   const isParsing = ref(false)
   const isDownloading = ref(false)
   const isPaused = ref(false)
+  // 暂停/继续操作进行中，防止重复点击
+  const isTogglingPause = ref(false)
   const progress = ref(0)
   const speed = ref('')
   const eta = ref('')
@@ -92,6 +94,7 @@ export const useDownloadStore = defineStore('download', () => {
 
     isDownloading.value = true
     isPaused.value = false
+    isTogglingPause.value = false
     error.value = ''
     progress.value = 0
     speed.value = ''
@@ -146,26 +149,50 @@ export const useDownloadStore = defineStore('download', () => {
     }
   }
 
-  async function pause() {
+  /**
+   * 暂停/继续操作极快（仅挂起/恢复进程），loading 状态会一闪而过。
+   * 这里保证交互状态至少展示 MIN_TOGGLE_DURATION，提供可见的反馈并防止重复点击。
+   */
+  const MIN_TOGGLE_DURATION = 400
+  async function withToggleGuard(action: () => Promise<void>) {
+    if (isTogglingPause.value) return
+    isTogglingPause.value = true
+    const start = Date.now()
     try {
-      const result = await window.electronAPI.pauseDownload()
-      if (result.success) {
-        isPaused.value = true
+      await action()
+    } finally {
+      const elapsed = Date.now() - start
+      if (elapsed < MIN_TOGGLE_DURATION) {
+        await new Promise((r) => setTimeout(r, MIN_TOGGLE_DURATION - elapsed))
       }
-    } catch (err: any) {
-      console.warn('暂停操作异常:', err)
+      isTogglingPause.value = false
     }
   }
 
-  async function resume() {
-    try {
-      const result = await window.electronAPI.resumeDownload()
-      if (result.success) {
-        isPaused.value = false
+  async function pause() {
+    await withToggleGuard(async () => {
+      try {
+        const result = await window.electronAPI.pauseDownload()
+        if (result.success) {
+          isPaused.value = true
+        }
+      } catch (err: any) {
+        console.warn('暂停操作异常:', err)
       }
-    } catch (err: any) {
-      console.warn('继续操作异常:', err)
-    }
+    })
+  }
+
+  async function resume() {
+    await withToggleGuard(async () => {
+      try {
+        const result = await window.electronAPI.resumeDownload()
+        if (result.success) {
+          isPaused.value = false
+        }
+      } catch (err: any) {
+        console.warn('继续操作异常:', err)
+      }
+    })
   }
 
   async function cancelDownload() {
@@ -214,6 +241,7 @@ export const useDownloadStore = defineStore('download', () => {
     selectedFormat.value = null
     isParsing.value = false
     isDownloading.value = false
+    isTogglingPause.value = false
     isPaused.value = false
     progress.value = 0
     speed.value = ''
@@ -262,6 +290,7 @@ export const useDownloadStore = defineStore('download', () => {
    * 忽略更新提示
    */
   function dismissBinaryUpdate() {
+    isTogglingPause,
     binaryUpdateNotice.value = null
   }
 

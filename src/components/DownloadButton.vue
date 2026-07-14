@@ -6,6 +6,8 @@
         theme="default"
         variant="outline"
         class="download-button-item"
+        :loading="store.isTogglingPause"
+        :disabled="store.isTogglingPause"
         @click="store.isPaused ? store.resume() : store.pause()"
       >
         <template #icon>
