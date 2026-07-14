@@ -290,7 +290,6 @@ export const useDownloadStore = defineStore('download', () => {
    * 忽略更新提示
    */
   function dismissBinaryUpdate() {
-    isTogglingPause,
     binaryUpdateNotice.value = null
   }
 
@@ -302,6 +301,7 @@ export const useDownloadStore = defineStore('download', () => {
     isDownloading,
     isPaused,
     progress,
+    isTogglingPause,
     speed,
     eta,
     error,
