@@ -5,12 +5,15 @@
         v-model="localUrl"
         type="url"
         placeholder="粘贴视频链接，例如 https://twitter.com/xxx/status/..."
-        :prefix-icon="LinkIcon"
         size="large"
         class="url-input-field"
         @enter="handleSubmit"
         :disabled="store.isParsing"
-      />
+      >
+        <template #prefixIcon>
+          <link-icon />
+        </template>
+      </t-input>
       <t-button
         theme="primary"
         size="large"
