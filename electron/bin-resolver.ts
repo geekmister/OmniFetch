@@ -35,6 +35,22 @@ function getBinPath(name: string): string {
 }
 
 /**
+ * 解析二进制实际路径，兼容多种命名约定：
+ * - 纯名: yt-dlp / yt-dlp.exe / ffmpeg / ffmpeg.exe（download-bins.mjs 产出）
+ * - 带平台后缀: yt-dlp_macos / yt-dlp_linux / yt-dlp.exe（手动预置常见命名）
+ * 优先返回存在的文件，都不存在则返回纯名路径（供上层判断缺失）。
+ */
+function resolveBinPath(name: string): string {
+  const plain = isWin ? `${name}.exe` : name
+  const suffix = isWin ? 'windows' : process.platform === 'darwin' ? 'macos' : 'linux'
+  const suffixed = `${name}_${suffix}${isWin ? '.exe' : ''}`
+  const dir = join(getBinDir(), getPlatformArchKey())
+  if (existsSync(join(dir, plain))) return join(dir, plain)
+  if (existsSync(join(dir, suffixed))) return join(dir, suffixed)
+  return join(dir, plain)
+}
+
+/**
  * 获取二进制目录路径（含平台-架构子目录）
  */
 export function getYtdlpDir(): string {
@@ -76,7 +92,7 @@ function validatePlatformMatch(filePath: string): boolean {
  * 优先级: 内置二进制(平台匹配) > 系统 PATH
  */
 export function getYtdlpPath(): string {
-  const builtin = getBinPath('yt-dlp')
+  const builtin = resolveBinPath('yt-dlp')
   if (existsSync(builtin)) {
     return builtin
   }
@@ -89,7 +105,7 @@ export function getYtdlpPath(): string {
  * 优先级: 内置二进制(平台匹配) > 系统 PATH
  */
 export function getFfmpegPath(): string {
-  const builtin = getBinPath('ffmpeg')
+  const builtin = resolveBinPath('ffmpeg')
   if (existsSync(builtin)) {
     return builtin
   }
@@ -107,8 +123,8 @@ export function validateBinaries(): { ytdlp: AppError | null; ffmpeg: AppError |
     ffmpeg: null,
   }
 
-  const ytdlpBuiltin = getBinPath('yt-dlp')
-  const ffmpegBuiltin = getBinPath('ffmpeg')
+  const ytdlpBuiltin = resolveBinPath('yt-dlp')
+  const ffmpegBuiltin = resolveBinPath('ffmpeg')
 
   // yt-dlp
   if (existsSync(ytdlpBuiltin)) {

@@ -26,6 +26,21 @@ function binName(name) {
 }
 
 /**
+ * 解析二进制实际文件名，兼容两种命名约定：
+ * - 纯名: yt-dlp / yt-dlp.exe / ffmpeg / ffmpeg.exe
+ * - 带平台后缀: yt-dlp_macos / yt-dlp_linux / yt-dlp.exe（手动预置常见命名）
+ * 返回目录中实际存在的文件路径，都不存在则返回纯名路径。
+ */
+function resolveBinFile(dir, name) {
+  const plain = isWin ? `${name}.exe` : name
+  const suffix = isWin ? 'windows' : process.platform === 'darwin' ? 'macos' : 'linux'
+  const suffixed = `${name}_${suffix}${isWin ? '.exe' : ''}`
+  if (existsSync(join(dir, plain))) return join(dir, plain)
+  if (existsSync(join(dir, suffixed))) return join(dir, suffixed)
+  return join(dir, plain)
+}
+
+/**
  * 获取二进制版本号
  * yt-dlp: --version ; ffmpeg: -version（首行含版本）
  */
@@ -89,8 +104,8 @@ function main() {
   let changed = 0
   for (const key of dirs) {
     const dir = join(BIN_DIR, key)
-    const ytPath = join(dir, binName('yt-dlp'))
-    const ffPath = join(dir, binName('ffmpeg'))
+    const ytPath = resolveBinFile(dir, 'yt-dlp')
+    const ffPath = resolveBinFile(dir, 'ffmpeg')
 
     const entry = manifest.binaries[key] || {}
     if (existsSync(ytPath)) {
