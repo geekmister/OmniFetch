@@ -180,24 +180,7 @@ OmniFetch/
 
 ## Contributing
 
-Contributions are welcome! Please follow these guidelines:
-
-- Use Vue 3 and `<script setup>` syntax.
-- Keep components small and focused.
-- Write clear English names for variables and functions.
-- Run `npm run build` before submitting changes.
-- Open issues for bugs, feature requests, and improvements.
-
-### Commit Messages
-
-Follow Conventional Commits:
-
-- `feat`: new feature
-- `fix`: bug fix
-- `docs`: documentation only
-- `style`: formatting, no code change
-- `refactor`: code change that neither fixes a bug nor adds a feature
-- `chore`: maintenance tasks
+Contributions are welcome! For setup, runtime-binary (Git LFS) management, branching, and commit-message conventions, please read the full guide in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

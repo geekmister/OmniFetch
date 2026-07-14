@@ -216,24 +216,7 @@ OmniFetch/
 
 ## 贡献指南
 
-欢迎贡献！请遵循以下规范：
-
-- 使用 Vue 3 和 `<script setup>` 语法。
-- 保持组件职责单一。
-- 为变量和函数使用清晰的英文命名。
-- 提交前运行 `npm run build` 确认构建通过。
-- 遇到问题时请先提交 issue，再提交 PR。
-
-### 提交规范
-
-请遵循 Conventional Commits：
-
-- `feat`: 新功能
-- `fix`: 修复 Bug
-- `docs`: 文档修改
-- `style`: 格式化修改，不影响逻辑
-- `refactor`: 重构代码，不新增功能也不修复 Bug
-- `chore`: 构建/维护任务
+欢迎贡献！关于开发环境搭建、运行时二进制（Git LFS）管理、分支流程与提交规范，请阅读完整的 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ---
 
