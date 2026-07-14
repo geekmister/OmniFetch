@@ -238,6 +238,10 @@ OmniFetch/
 
 ---
 
+## 支持的站点
+
+OmniFetch 依赖 yt-dlp 的提取器支持 1000+ 网站。完整支持站点列表见 [SupportedSites.zh-CN.md](SupportedSites.zh-CN.md)（中文）与 [SupportedSites.md](SupportedSites.md)（English）。
+
 ## 许可证
 
 基于 [MIT 许可证](LICENSE) 发布。

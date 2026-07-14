@@ -182,6 +182,10 @@ OmniFetch/
 
 Contributions are welcome! For setup, runtime-binary (Git LFS) management, branching, and commit-message conventions, please read the full guide in [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Supported Sites
+
+OmniFetch relies on yt-dlp's extractors to support 1000+ websites. For the full list of supported sites, see [SupportedSites.md](SupportedSites.md) (English) and [SupportedSites.zh-CN.md](SupportedSites.zh-CN.md) (中文).
+
 ## License
 
 MIT License
