@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Notification, nativeImage } from 'electron'
 import { join } from 'path'
 import { getVideoInfo, startDownload, pauseDownload, resumeDownload, cancelDownload, getCurrentDownload } from '../downloader'
-import { checkAndUpdateYtdlp } from '../ytdlp-updater'
+import { checkBinaryUpdates, applyBinaryUpdates } from '../binary-updater'
 import { validateBinaries } from '../bin-resolver'
 import { AppError, toAppError } from '../../src/shared/error-codes'
 
@@ -69,8 +69,8 @@ app.whenReady().then(() => {
     console.warn('[bin] 二进制预检异常:', binaryCheck.ytdlp?.code, binaryCheck.ffmpeg?.code)
   }
   createWindow()
-  // 后台静默检查 yt-dlp 更新（不阻塞窗口显示）
-  checkAndUpdateYtdlp()
+  // 后台检查二进制更新（不阻塞窗口显示），有更新时通知前端
+  checkBinaryUpdates(mainWindow)
 })
 
 app.on('window-all-closed', () => {
@@ -185,5 +185,17 @@ ipcMain.handle('cancel-download', async () => {
     // 对话框异常时默认取消且不删除
     cancelDownload(false)
     return { success: true, deleted: false }
+  }
+})
+
+// ===== 二进制更新 =====
+
+// 前端请求执行二进制更新（用户确认后）
+ipcMain.handle('update-binaries', async () => {
+  try {
+    const result = await applyBinaryUpdates()
+    return { success: result.success, updated: result.updated, failed: result.failed }
+  } catch (err: any) {
+    return { success: false, updated: [], failed: ['yt-dlp', 'ffmpeg'], error: err.message }
   }
 })

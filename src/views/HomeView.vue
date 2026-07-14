@@ -6,6 +6,40 @@
       <p class="home-subtitle">粘贴视频链接，解析后可选择格式下载</p>
     </div>
 
+    <!-- 二进制更新提示（警告：联网下载失败率较高，建议用预置二进制） -->
+    <t-alert
+      v-if="store.binaryUpdateNotice && store.binaryUpdateNotice.length"
+      theme="warning"
+      class="home-block"
+    >
+      <template #title>
+        检测到二进制有可用更新（{{ store.binaryUpdateNotice.map((u) => u.name).join('、') }}）
+      </template>
+      <p>
+        联网下载失败率较高，建议优先使用仓库预置的二进制文件（已随安装包提供，无需下载）。
+      </p>
+      <p v-if="!store.binaryUpdateResult">
+        <t-button
+          size="small"
+          theme="warning"
+          :loading="store.isUpdatingBinaries"
+          :disabled="store.isUpdatingBinaries"
+          @click="store.applyBinaryUpdate()"
+        >
+          仍要联网更新
+        </t-button>
+        <t-button size="small" variant="text" :disabled="store.isUpdatingBinaries" @click="store.dismissBinaryUpdate()">
+          忽略
+        </t-button>
+      </p>
+      <p v-else-if="store.binaryUpdateResult.success" class="update-ok">
+        更新成功：{{ store.binaryUpdateResult.updated.join('、') }}
+      </p>
+      <p v-else class="update-fail">
+        更新失败（{{ store.binaryUpdateResult.failed.join('、') }}），请使用预置二进制或手动更新。
+      </p>
+    </t-alert>
+
     <!-- URL 输入 -->
     <UrlInput />
 
@@ -75,6 +109,12 @@ const store = useDownloadStore()
 }
 .home-block {
   margin-top: 0;
+}
+.update-ok {
+  color: var(--td-success-color);
+}
+.update-fail {
+  color: var(--td-error-color);
 }
 .home-loading {
   padding: 32px 0;

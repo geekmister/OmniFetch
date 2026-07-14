@@ -28,7 +28,16 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import HomeView from './views/HomeView.vue'
+import { useDownloadStore } from './stores/download'
+
+const store = useDownloadStore()
+
+onMounted(() => {
+  // 注册二进制更新监听（主进程启动检查后推送通知）
+  store.setupBinaryUpdateListener()
+})
 </script>
 
 <style scoped>

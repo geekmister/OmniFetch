@@ -118,21 +118,30 @@ OmniFetch 自带运行时二进制文件，按 **平台-架构** 分目录存放
 
 Electron 主进程通过 `electron/bin-resolver.ts` 解析内置二进制文件（含魔数校验，确保平台匹配），若本地环境没有匹配版本，则回退到系统 `PATH` 中的 `yt-dlp` / `ffmpeg`；若两者均缺失，应用会给出明确报错与修复指引（提示运行 `npm run download:bins`）。
 
+#### 预置版本与自动更新
+
+仓库随安装包**预置全部平台的二进制文件**，并通过 `bin/manifest.json` 记录各平台-架构的预置版本。应用启动时：
+
+- 若当前平台-架构的预置二进制已是最新（与 `manifest.json` 一致），则**跳过联网更新**，直接使用预置文件；
+- 若检测到上游有更新，会在界面顶部以警告提示用户，**并明确告知联网下载失败率较高、建议优先使用预置二进制**；是否联网更新由用户自行决定。
+
 ## 项目结构
 
 ```text
 OmniFetch/
 ├── bin/
-│   ├── ffmpeg
-│   └── yt-dlp
+│   ├── <platform>-<arch>/
+│   │   ├── yt-dlp(.exe)
+│   │   └── ffmpeg(.exe)
+│   └── manifest.json
 ├── electron/
 │   ├── bin-resolver.ts
 │   ├── downloader.ts
+│   ├── binary-updater.ts
 │   ├── main/
 │   │   └── index.ts
 │   ├── preload/
 │   │   └── index.ts
-│   └── ytdlp-updater.ts
 ├── python-script/
 ├── scripts/
 │   └── download-bins.mjs

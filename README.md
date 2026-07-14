@@ -82,21 +82,30 @@ These binaries are included as extra resources during packaging. If you run from
 
 The Electron main process resolves built-in binaries via `electron/bin-resolver.ts` (with magic-number validation to ensure platform match). If no matching built-in binary is found, it falls back to the system `PATH` for `yt-dlp` / `ffmpeg`. If both are missing, the app shows a clear error with a fix hint (run `npm run download:bins`).
 
+#### Bundled versions & auto-update
+
+The app **ships prebuilt binaries for all platforms** in the installer, and `bin/manifest.json` records the bundled version per platform-arch. On startup:
+
+- If the bundled binary for the current platform-arch is already up to date (matches `manifest.json`), the app **skips the online update** and uses the bundled file directly.
+- If an upstream update is detected, a warning is shown at the top of the UI, **explicitly noting that online downloads have a high failure rate and recommending the bundled binaries**; whether to update online is left to the user.
+
 ## Project Structure
 
 ```text
 OmniFetch/
 ├── bin/
-│   ├── ffmpeg
-│   └── yt-dlp
+│   ├── <platform>-<arch>/
+│   │   ├── yt-dlp(.exe)
+│   │   └── ffmpeg(.exe)
+│   └── manifest.json
 ├── electron/
 │   ├── bin-resolver.ts
 │   ├── downloader.ts
+│   ├── binary-updater.ts
 │   ├── main/
 │   │   └── index.ts
 │   ├── preload/
 │   │   └── index.ts
-│   └── ytdlp-updater.ts
 ├── python-script/
 ├── scripts/
 │   └── download-bins.mjs

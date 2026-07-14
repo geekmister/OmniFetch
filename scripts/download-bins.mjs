@@ -2,7 +2,7 @@
  * 构建时下载 yt-dlp 和 ffmpeg 二进制文件到 bin/ 目录
  * 用法: node scripts/download-bins.mjs
  */
-import { createWriteStream, existsSync, mkdirSync, chmodSync, unlinkSync, renameSync } from 'fs'
+import { createWriteStream, existsSync, mkdirSync, chmodSync, unlinkSync, renameSync, writeFileSync, readFileSync } from 'fs'
 import { get } from 'https'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -231,6 +231,24 @@ async function main() {
       console.log(`   💡 请手动安装: brew install ffmpeg (macOS) / apt install ffmpeg (Linux)`)
     }
   }
+
+  // 写入/更新 manifest.json，记录当前平台-架构的预置版本
+  const manifestPath = join(BIN_DIR, 'manifest.json')
+  let manifest = { comment: 'OmniFetch 预置二进制清单，由 npm run download:bins 生成。', generatedAt: '', binaries: {} }
+  if (existsSync(manifestPath)) {
+    try {
+      manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+      manifest.binaries = manifest.binaries || {}
+    } catch {}
+  }
+  const key = `${PLATFORM}-${ARCH}`
+  manifest.generatedAt = new Date().toISOString().slice(0, 10)
+  manifest.binaries[key] = {
+    'yt-dlp': ytdlpName,
+    ffmpeg: ffmpegName,
+  }
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
+  console.log(`   📝 已更新 manifest.json (${key})`)
 
   console.log(`\n🎉 二进制文件准备完成!`)
 }

@@ -16,6 +16,20 @@ interface IpcResult {
   deleted?: boolean
 }
 
+interface BinaryUpdateInfo {
+  name: 'yt-dlp' | 'ffmpeg'
+  currentVersion: string | null
+  bundledVersion: string | null
+  isLatest: boolean
+}
+
+interface BinaryUpdateResult {
+  success: boolean
+  updated: ('yt-dlp' | 'ffmpeg')[]
+  failed: ('yt-dlp' | 'ffmpeg')[]
+  error?: string
+}
+
 interface ElectronAPI {
   getVideoInfo: (url: string) => Promise<IpcResult & { data?: VideoInfo }>
   selectOutputPath: (defaultName: string) => Promise<string | null>
@@ -23,8 +37,11 @@ interface ElectronAPI {
   pauseDownload: () => Promise<IpcResult>
   resumeDownload: () => Promise<IpcResult>
   cancelDownload: () => Promise<IpcResult>
+  updateBinaries: () => Promise<BinaryUpdateResult>
   onDownloadProgress: (callback: (progress: DownloadProgress) => void) => void
+  onBinaryUpdateAvailable: (callback: (updates: BinaryUpdateInfo[]) => void) => void
   removeDownloadProgressListener: () => void
+  removeBinaryUpdateListener: () => void
 }
 
 interface VideoFormat {

@@ -17,6 +17,11 @@ export const useDownloadStore = defineStore('download', () => {
   const parseError = ref('')
   const downloadComplete = ref(false)
 
+  // 二进制更新提示（启动检查后由主进程推送）
+  const binaryUpdateNotice = ref<BinaryUpdateInfo[] | null>(null)
+  const isUpdatingBinaries = ref(false)
+  const binaryUpdateResult = ref<{ success: boolean; updated: string[]; failed: string[] } | null>(null)
+
   // 计算属性
   const isValidUrl = computed(() => {
     return url.value.trim().length > 0 && /^https?:\/\/.+/.test(url.value.trim())
@@ -218,6 +223,48 @@ export const useDownloadStore = defineStore('download', () => {
     downloadComplete.value = false
   }
 
+  /**
+   * 注册二进制更新监听（应用启动时调用一次）
+   * 主进程检测到上游有更新时推送通知，前端展示警告并建议优先使用预置二进制
+   */
+  function setupBinaryUpdateListener() {
+    window.electronAPI.onBinaryUpdateAvailable((updates) => {
+      binaryUpdateNotice.value = updates
+    })
+  }
+
+  /**
+   * 用户确认后执行二进制更新（联网下载，失败率较高）
+   */
+  async function applyBinaryUpdate() {
+    if (isUpdatingBinaries.value) return
+    isUpdatingBinaries.value = true
+    binaryUpdateResult.value = null
+    try {
+      const result = await window.electronAPI.updateBinaries()
+      binaryUpdateResult.value = {
+        success: result.success,
+        updated: result.updated,
+        failed: result.failed,
+      }
+      if (result.success) {
+        // 更新成功，清除提示
+        binaryUpdateNotice.value = null
+      }
+    } catch (err: any) {
+      binaryUpdateResult.value = { success: false, updated: [], failed: ['yt-dlp', 'ffmpeg'] }
+    } finally {
+      isUpdatingBinaries.value = false
+    }
+  }
+
+  /**
+   * 忽略更新提示
+   */
+  function dismissBinaryUpdate() {
+    binaryUpdateNotice.value = null
+  }
+
   return {
     url,
     videoInfo,
@@ -231,6 +278,9 @@ export const useDownloadStore = defineStore('download', () => {
     error,
     parseError,
     downloadComplete,
+    binaryUpdateNotice,
+    isUpdatingBinaries,
+    binaryUpdateResult,
     isValidUrl,
     formattedDuration,
     formattedFilesize,
@@ -241,5 +291,8 @@ export const useDownloadStore = defineStore('download', () => {
     resume,
     cancelDownload,
     reset,
+    setupBinaryUpdateListener,
+    applyBinaryUpdate,
+    dismissBinaryUpdate,
   }
 })
