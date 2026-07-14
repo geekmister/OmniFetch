@@ -115,12 +115,13 @@ export function cancelDownload(deleteFile: boolean): boolean {
  *   1. HTTPS_PROXY / HTTP_PROXY 环境变量
  *   2. Windows 系统代理设置 (Internet Settings 注册表)
  *   3. macOS 系统代理设置 (networksetup / scutil)
+ *   4. Linux 系统代理设置 (GNOME gsettings / KDE kreadconfig5)
  *
  * 如果你的 VPN/代理未通过环境变量暴露，请在启动前设置:
  *   set HTTPS_PROXY=http://127.0.0.1:7890   # Windows (Clash 默认端口)
  *   export HTTPS_PROXY=http://127.0.0.1:7890 # macOS / Linux
  */
-// 缓存代理检测结果，避免每次调用都执行 scutil / reg query
+// 缓存代理检测结果，避免每次调用都执行 scutil / reg query / gsettings
 let cachedProxy: string | null | undefined = undefined
 
 /**
@@ -192,6 +193,51 @@ function detectWindowsProxy(): string | null {
   }
 }
 
+/**
+ * 读取 Linux 系统代理。
+ * Linux 桌面环境无统一系统代理入口，按桌面环境分别处理：
+ *   - GNOME: 通过 gsettings 读取 org.gnome.system.proxy.{http,https,socks} 的 host/port
+ *   - KDE:   通过 kreadconfig5 读取 proxysettings 的 host/port
+ * 仅处理「手动代理」(mode=manual)，不解析 PAC 自动配置与 WPAD。
+ * 任一桌面环境读取失败均静默回退到环境变量（已在 detectProxy 第 1 步处理）。
+ */
+function detectLinuxProxy(): string | null {
+  // 1. GNOME: gsettings
+  try {
+    const mode = execSync('gsettings get org.gnome.system.proxy mode', { encoding: 'utf8', timeout: 3000 }).trim()
+    if (mode === "'manual'" || mode === 'manual') {
+      // 优先 https，其次 http，最后 socks
+      const candidates = ['https', 'http', 'socks']
+      for (const proto of candidates) {
+        const host = execSync(`gsettings get org.gnome.system.proxy.${proto} host`, { encoding: 'utf8', timeout: 3000 }).trim().replace(/^'|'$/g, '')
+        const port = execSync(`gsettings get org.gnome.system.proxy.${proto} port`, { encoding: 'utf8', timeout: 3000 }).trim()
+        if (host && port && /^\d+$/.test(port)) {
+          return normalizeProxyAddr(`${host}:${port}`, proto)
+        }
+      }
+    }
+  } catch {
+    // gsettings 不可用（非 GNOME 或命令缺失）时静默跳过
+  }
+
+  // 2. KDE: kreadconfig5
+  try {
+    const mode = execSync('kreadconfig5 --group Proxy --key ProxyType', { encoding: 'utf8', timeout: 3000 }).trim()
+    // KDE ProxyType: 1=手动代理配置
+    if (mode === '1') {
+      const host = execSync('kreadconfig5 --group Proxy --key HostName', { encoding: 'utf8', timeout: 3000 }).trim()
+      const port = execSync('kreadconfig5 --group Proxy --key Port', { encoding: 'utf8', timeout: 3000 }).trim()
+      if (host && port && /^\d+$/.test(port)) {
+        return normalizeProxyAddr(`${host}:${port}`, 'http')
+      }
+    }
+  } catch {
+    // kreadconfig5 不可用（非 KDE 或命令缺失）时静默跳过
+  }
+
+  return null
+}
+
 function detectProxy(): string | null {
   if (cachedProxy !== undefined) return cachedProxy
   // 1. 从环境变量读取
@@ -237,6 +283,16 @@ function detectProxy(): string | null {
       }
     } catch {
       // scutil 不可用时静默跳过
+    }
+  }
+
+  // 4. Linux: 读取系统代理设置（GNOME gsettings / KDE kreadconfig5）
+  if (process.platform === 'linux') {
+    const proxy = detectLinuxProxy()
+    if (proxy) {
+      cachedProxy = proxy
+      console.log(`[proxy] 检测到 Linux 系统代理: ${proxy}`)
+      return proxy
     }
   }
 
