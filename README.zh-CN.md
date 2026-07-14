@@ -38,6 +38,10 @@
 	OmniFetch是一个通用视频下载器，基于 Electron、Vue 3 和 yt-dlp，支持 1000+ 网站（YouTube、X、B站、抖音等）。一键解析、格式选择、下载进度显示，开箱即用。
 </p>
 
+<p align="center">
+	完整支持站点列表（1000+ 网站）见 <a href="SupportedSites.zh-CN.md">支持的站点</a>。
+</p>
+
 ---
 
 ![示例](demo.png)
