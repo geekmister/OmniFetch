@@ -6,7 +6,7 @@
  */
 import { app } from 'electron'
 import { join } from 'path'
-import { existsSync, readFileSync } from 'fs'
+import { existsSync, openSync, readSync, closeSync } from 'fs'
 import { AppErrorCode, AppError, makeError } from '../src/shared/error-codes'
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -65,11 +65,17 @@ export function getYtdlpDir(): string {
  */
 function detectBinaryFormat(filePath: string): 'pe' | 'macho' | 'elf' | 'unknown' {
   try {
-    const buf = readFileSync(filePath, { start: 0, end: 4 })
-    if (buf[0] === 0x4d && buf[1] === 0x5a) return 'pe'
-    if (buf[0] === 0xcf && buf[1] === 0xfa && buf[2] === 0xed && buf[3] === 0xfe) return 'macho'
-    if (buf[0] === 0x7f && buf[1] === 0x45 && buf[2] === 0x4c && buf[3] === 0x46) return 'elf'
-    return 'unknown'
+    const fd = openSync(filePath, 'r')
+    try {
+      const buf = Buffer.alloc(4)
+      readSync(fd, buf, 0, 4, 0)
+      if (buf[0] === 0x4d && buf[1] === 0x5a) return 'pe'
+      if (buf[0] === 0xcf && buf[1] === 0xfa && buf[2] === 0xed && buf[3] === 0xfe) return 'macho'
+      if (buf[0] === 0x7f && buf[1] === 0x45 && buf[2] === 0x4c && buf[3] === 0x46) return 'elf'
+      return 'unknown'
+    } finally {
+      closeSync(fd)
+    }
   } catch {
     return 'unknown'
   }

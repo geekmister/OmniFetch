@@ -1,10 +1,16 @@
 {
-  "compilerOptions": {
-    "composite": true,
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
-  },
-  "include": ["electron.vite.config.ts", "electron/downloader.ts", "electron/bin-resolver.ts", "electron/binary-updater.ts"]
+    "compilerOptions": {
+        "skipLibCheck": true,
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
+        "types": ["node"]
+    },
+    "include": [
+        "electron.vite.config.ts",
+        "electron/downloader.ts",
+        "electron/bin-resolver.ts",
+        "electron/binary-updater.ts",
+        "src/shared/error-codes.ts"
+    ]
 }

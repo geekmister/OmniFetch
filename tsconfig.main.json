@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
-    "composite": true,
     "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["electron/main/**/*.ts"]
+  "include": ["electron/main/**/*.ts", "electron/downloader.ts", "electron/bin-resolver.ts", "electron/binary-updater.ts", "src/shared/error-codes.ts"]
 }
