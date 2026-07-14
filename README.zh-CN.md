@@ -66,6 +66,11 @@
    ```
 
 3. 下载运行时二进制
+
+	> ⚠️ **注意**：二进制是平台相关的，**必须在目标平台执行 `npm run download:bins`** 以获取对应版本。跨平台直接拷贝会导致不兼容（如 macOS 的 Mach-O 二进制无法在 Windows 上运行）。
+
+	> ⚠️ **注意**：若非有必须使用最新版本要求，不建议频繁联网更新二进制，因上游下载源不稳定，可能导致下载失败率较高。建议优先使用仓库预置的二进制文件。
+
    ```bash
    npm run download:bins
    ```
@@ -150,6 +155,16 @@ Electron 主进程通过 `electron/bin-resolver.ts` 解析内置二进制文件�
 | `linux-x64` | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz` | 解压取 `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg` |
 
 > 注：Windows / Linux 的 ffmpeg 为压缩包，需解压后提取可执行文件；macOS 为裸二进制 zip。
+
+#### 同步版本号到 manifest.json
+
+将二进制文件放入 `bin/<platform>-<arch>/`（通过 `npm run download:bins` 或手动放置）后，运行以下命令可自动探测并把实际版本号写入 `bin/manifest.json`：
+
+```bash
+npm run sync:bin-versions
+```
+
+脚本会扫描每个 `bin/<platform>-<arch>/` 目录，分别执行 `yt-dlp --version` 与 `ffmpeg -version`，解析输出后将版本号回填到 `bin/manifest.json`（保留其他平台条目）。这样无需手动编辑即可保持预置版本记录准确。
 
 ## 项目结构
 

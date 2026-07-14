@@ -30,6 +30,11 @@ Features
    ```
 
 3. Download runtime binaries
+
+	> ⚠️ **Note**: Binaries are platform-specific. You **must run `npm run download:bins` on the target platform** to fetch the matching build. Copying binaries across platforms causes incompatibility (e.g. a macOS Mach-O binary cannot run on Windows).
+
+	> ⚠️ **Note**: Unless you specifically need the latest version, avoid frequent online binary updates. Upstream download sources are unstable and may have a high failure rate. Prefer the bundled binaries shipped with the repository.
+
    ```bash
    npm run download:bins
    ```
@@ -114,6 +119,16 @@ The app **ships prebuilt binaries for all platforms** in the installer, and `bin
 | `linux-x64` | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz` | extract `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg` |
 
 > Note: Windows/Linux ffmpeg ships as an archive and must be extracted; macOS ships as a bare binary zip.
+
+#### Sync versions to manifest.json
+
+After placing binaries under `bin/<platform>-<arch>/` (either via `npm run download:bins` or manually), run the following to auto-detect and record their actual versions into `bin/manifest.json`:
+
+```bash
+npm run sync:bin-versions
+```
+
+The script scans each `bin/<platform>-<arch>/` directory, executes `yt-dlp --version` and `ffmpeg -version`, parses the output, and writes the resolved version numbers back to `bin/manifest.json` (preserving other platforms' entries). This keeps the bundled-version record accurate without manual editing.
 
 ## Project Structure
 
