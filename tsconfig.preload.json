@@ -1,9 +1,14 @@
 {
-  "compilerOptions": {
-    "types": ["node"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "allowSyntheticDefaultImports": true
-  },
-  "include": ["electron/preload/**/*.ts", "electron/downloader.ts", "electron/bin-resolver.ts", "src/shared/error-codes.ts"]
+    "compilerOptions": {
+        "types": ["node"],
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "electron/preload/**/*.ts",
+        "electron/downloader.ts",
+        "electron/bin-resolver.ts",
+        "src/shared/error-codes.ts"
+    ]
 }

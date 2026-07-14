@@ -48,56 +48,60 @@
 
 ## 核心功能
 
-| Emoji | 功能 | 描述 |
-|---|---|---|
-| 🚀 | 全站下载 | 基于 yt-dlp，支持 1000+ 视频站点 |
-| 📥 | 一键解析 | 输入视频链接，自动读取可用格式 |
-| 🎚️ | 格式选择 | 选择清晰度、音视频编码、容器 |
-| ⏱️ | 进度展示 | 实时显示下载百分比、速度和 ETA |
-| ⏸️ | 暂停/继续/取消 | 允许控制当前下载任务 |
-| ⚙️ | 内置运行时 | 携带 `yt-dlp` 和 `ffmpeg` 二进制文件 |
-| 🔒 | 安全 IPC | Electron `contextBridge` + 预加载层，保证渲染器安全 |
+| Emoji | 功能           | 描述                                                |
+| ----- | -------------- | --------------------------------------------------- |
+| 🚀    | 全站下载       | 基于 yt-dlp，支持 1000+ 视频站点                    |
+| 📥    | 一键解析       | 输入视频链接，自动读取可用格式                      |
+| 🎚️    | 格式选择       | 选择清晰度、音视频编码、容器                        |
+| ⏱️    | 进度展示       | 实时显示下载百分比、速度和 ETA                      |
+| ⏸️    | 暂停/继续/取消 | 允许控制当前下载任务                                |
+| ⚙️    | 内置运行时     | 携带 `yt-dlp` 和 `ffmpeg` 二进制文件                |
+| 🔒    | 安全 IPC       | Electron `contextBridge` + 预加载层，保证渲染器安全 |
 
 ## 快速开始
 
 1. 环境要求
-   - Node.js >= 18
-   - macOS / Windows / Linux
+    - Node.js >= 18
+    - macOS / Windows / Linux
 
 2. 安装依赖
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 3. 下载运行时二进制
 
-	> ⚠️ **注意**：二进制是平台相关的，**必须在目标平台执行 `npm run download:bins`** 以获取对应版本。跨平台直接拷贝会导致不兼容（如 macOS 的 Mach-O 二进制无法在 Windows 上运行）。
+    > ⚠️ **注意**：二进制是平台相关的，**必须在目标平台执行 `npm run download:bins`** 以获取对应版本。跨平台直接拷贝会导致不兼容（如 macOS 的 Mach-O 二进制无法在 Windows 上运行）。
 
-	> ⚠️ **注意**：若非有必须使用最新版本要求，不建议频繁联网更新二进制，因上游下载源不稳定，可能导致下载失败率较高。建议优先使用仓库预置的二进制文件。
+    > ⚠️ **注意**：若非有必须使用最新版本要求，不建议频繁联网更新二进制，因上游下载源不稳定，可能导致下载失败率较高。建议优先使用仓库预置的二进制文件。
 
-   ```bash
-   npm run download:bins
-   ```
+    ```bash
+    npm run download:bins
+    ```
 
 4. 启动渲染器开发服务
-   ```bash
-   npm run dev
-   ```
+
+    ```bash
+    npm run dev
+    ```
 
 5. 启动 Electron 开发模式
-   ```bash
-   npm run electron:dev
-   ```
+
+    ```bash
+    npm run electron:dev
+    ```
 
 6. 生成生产构建
-   ```bash
-   npm run build
-   ```
+
+    ```bash
+    npm run build
+    ```
 
 7. 打包发布
-   ```bash
-   npm run electron:build
-   ```
+    ```bash
+    npm run electron:build
+    ```
 
 ## 使用说明
 
@@ -142,12 +146,12 @@ Electron 主进程通过 `electron/bin-resolver.ts` 解析内置二进制文件�
 
 **yt-dlp**
 
-| 平台-架构 | 下载链接 | 存放文件名 |
-|----------|----------|------------|
-| `win32-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe` | `bin/win32-x64/yt-dlp.exe` |
-| `darwin-arm64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-arm64/yt-dlp` |
-| `darwin-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-x64/yt-dlp` |
-| `linux-x64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-x64/yt-dlp` |
+| 平台-架构      | 下载链接                                                                 | 存放文件名                 |
+| -------------- | ------------------------------------------------------------------------ | -------------------------- |
+| `win32-x64`    | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe`   | `bin/win32-x64/yt-dlp.exe` |
+| `darwin-arm64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-arm64/yt-dlp`  |
+| `darwin-x64`   | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-x64/yt-dlp`    |
+| `linux-x64`    | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-x64/yt-dlp`     |
 
 > 注：yt-dlp 的 macOS 版为通用二进制（universal），`darwin-arm64` 与 `darwin-x64` 共用同一链接。
 
@@ -164,12 +168,12 @@ OmniFetch 会自动探测代理，并通过 `--proxy` 参数传递给 yt-dlp，�
 
 **ffmpeg**
 
-| 平台-架构 | 下载链接 | 提取目标 |
-|----------|----------|----------|
-| `win32-x64` | `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip` | 解压取 `bin/ffmpeg.exe` → `bin/win32-x64/ffmpeg.exe` |
-| `darwin-arm64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip` | 解压取 `ffmpeg` → `bin/darwin-arm64/ffmpeg` |
-| `darwin-x64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip` | 解压取 `ffmpeg` → `bin/darwin-x64/ffmpeg` |
-| `linux-x64` | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz` | 解压取 `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg` |
+| 平台-架构      | 下载链接                                                                                            | 提取目标                                                 |
+| -------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `win32-x64`    | `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip` | 解压取 `bin/ffmpeg.exe` → `bin/win32-x64/ffmpeg.exe`     |
+| `darwin-arm64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | 解压取 `ffmpeg` → `bin/darwin-arm64/ffmpeg`              |
+| `darwin-x64`   | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | 解压取 `ffmpeg` → `bin/darwin-x64/ffmpeg`                |
+| `linux-x64`    | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz`                      | 解压取 `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg` |
 
 > 注：Windows / Linux 的 ffmpeg 为压缩包，需解压后提取可执行文件；macOS 为裸二进制 zip。
 

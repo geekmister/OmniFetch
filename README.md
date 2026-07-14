@@ -1,14 +1,48 @@
-# OmniFetch
+<p align="center">
+	<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&height=220&color=0:4f46e5,50:0ea5e9,100:14b8a6&text=OmniFetch&fontColor=ffffff&fontSize=64" alt="OmniFetch Banner" />
+</p>
 
-**OmniFetch** – Universal video downloader built with Electron, Vue 3, and yt-dlp. Supports 1000+ websites including YouTube, X, Bilibili, Douyin, and more.
+<p align="center">
+	<a href="LICENSE"><img src="https://img.shields.io/badge/LICENSE-MIT-111827.svg?style=for-the-badge" alt="MIT" /></a>
+	<img src="https://img.shields.io/badge/Runtime - Browser Only-0f766e.svg?style=for-the-badge" alt="Browser Only" />
+	<img src="https://img.shields.io/badge/Privacy - Local Processing-1d4ed8.svg?style=for-the-badge" alt="Local Processing" />
+	<img src="https://img.shields.io/badge/Test-Playwright-7c3aed.svg?style=for-the-badge" alt="Playwright" />
+</p>
+
+<p align="center">
+	<a href="https://github.com/Geekmister/OmniFetch/stargazers">
+		<img src="https://img.shields.io/github/stars/Geekmister/OmniFetch?style=flat-square&label=Starts&color=f59e0b" alt="GitHub Stars" />
+	</a>
+	<a href="https://github.com/Geekmister/OmniFetch/network/members">
+		<img src="https://img.shields.io/github/forks/Geekmister/OmniFetch?style=flat-square&label=Forks&color=0ea5e9" alt="GitHub Forks" />
+	</a>
+	<a href="https://github.com/Geekmister/OmniFetch/issues">
+		<img src="https://img.shields.io/github/issues/Geekmister/OmniFetch?style=flat-square&label=Issues&color=ef4444" alt="GitHub Issues" />
+	</a>
+	<a href="https://github.com/Geekmister/OmniFetch/commits">
+		<img src="https://img.shields.io/github/last-commit/Geekmister/OmniFetch?style=flat-square&label=Last%20Commit&color=22c55e" alt="Last Commit" />
+	</a>
+	<img src="https://visitor-badge.laobi.icu/badge?page_id=Geekmister.OmniFetch" alt="Visitors" />
+	<a href="https://github.com/Geekmister/OmniFetch/releases">
+		<img src="https://img.shields.io/github/downloads/Geekmister/OmniFetch/total?style=flat-square&label=Downloads&color=8b5cf6" alt="Downloads" />
+	</a>
+</p>
 
 <p align="center">
   <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/中文-🇨🇳-111827.svg?style=for-the-badge" alt="中文版本" /></a>
 </p>
 
 <p align="center">
+    OmniFetch Universal video downloader built with Electron, Vue 3, and yt-dlp. Supports 1000+ websites including YouTube, X, Bilibili, Douyin, and more.
+</p>
+
+<p align="center">
   For the full list of 1000+ supported sites, see <a href="SupportedSites.md">Supported Sites</a>.
 </p>
+
+---
+
+![DEMO](demo.png)
 
 ## Core
 

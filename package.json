@@ -1,75 +1,75 @@
 {
-  "name": "omnifetch",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "description": "OmniFetch - 通用视频下载器",
-  "main": "out/main/index.js",
-  "scripts": {
-    "dev": "node scripts/dev.mjs",
-    "download:bins": "node scripts/download-bins.mjs",
-    "sync:bin-versions": "node scripts/sync-bin-versions.mjs",
-    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
-    "build": "electron-vite build",
-    "electron:dev": "cross-env NODE_ENV=development electron-vite dev",
-    "electron:build": "npm run download:bins && electron-vite build && electron-builder",
-    "preview": "electron-vite preview"
-  },
-  "dependencies": {
-    "pinia": "^2.1.0",
-    "tdesign-icons-vue-next": "^0.4.6",
-    "tdesign-vue-next": "^1.20.3",
-    "vue": "^3.4.0"
-  },
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
-    "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.27.0",
-    "prettier": "^3.3.0",
-    "@vitejs/plugin-vue": "^5.2.4",
-    "cross-env": "^7.0.3",
-    "electron": "^28.0.0",
-    "electron-builder": "^24.0.0",
-    "electron-vite": "^5.0.0",
-    "typescript": "^5.3.0",
-    "vite": "^6.0.0",
-    "vue-tsc": "^2.2.12"
-  },
-  "build": {
-    "appId": "com.geekmister.omnifetch",
-    "productName": "OmniFetch",
-    "directories": {
-      "output": "release"
+    "name": "omnifetch",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "description": "OmniFetch - 通用视频下载器",
+    "main": "out/main/index.js",
+    "scripts": {
+        "dev": "node scripts/dev.mjs",
+        "download:bins": "node scripts/download-bins.mjs",
+        "sync:bin-versions": "node scripts/sync-bin-versions.mjs",
+        "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+        "build": "electron-vite build",
+        "electron:dev": "cross-env NODE_ENV=development electron-vite dev",
+        "electron:build": "npm run download:bins && electron-vite build && electron-builder",
+        "preview": "electron-vite preview"
     },
-    "files": [
-      "out/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "bin/",
-        "to": "bin/",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "mac": {
-      "target": "dmg",
-      "category": "public.app-category.utilities",
-      "icon": "build/icon.icns"
+    "dependencies": {
+        "pinia": "^2.1.0",
+        "tdesign-icons-vue-next": "^0.4.6",
+        "tdesign-vue-next": "^1.20.3",
+        "vue": "^3.4.0"
     },
-    "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico"
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^7.18.0",
+        "@typescript-eslint/parser": "^7.18.0",
+        "eslint": "^8.57.0",
+        "eslint-plugin-vue": "^9.27.0",
+        "prettier": "^3.3.0",
+        "@vitejs/plugin-vue": "^5.2.4",
+        "cross-env": "^7.0.3",
+        "electron": "^28.0.0",
+        "electron-builder": "^24.0.0",
+        "electron-vite": "^5.0.0",
+        "typescript": "^5.3.0",
+        "vite": "^6.0.0",
+        "vue-tsc": "^2.2.12"
     },
-    "linux": {
-      "target": "AppImage",
-      "icon": "build/icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+    "build": {
+        "appId": "com.geekmister.omnifetch",
+        "productName": "OmniFetch",
+        "directories": {
+            "output": "release"
+        },
+        "files": [
+            "out/**/*"
+        ],
+        "extraResources": [
+            {
+                "from": "bin/",
+                "to": "bin/",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
+        "mac": {
+            "target": "dmg",
+            "category": "public.app-category.utilities",
+            "icon": "build/icon.icns"
+        },
+        "win": {
+            "target": "nsis",
+            "icon": "build/icon.ico"
+        },
+        "linux": {
+            "target": "AppImage",
+            "icon": "build/icon.png"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true
+        }
     }
-  }
 }
