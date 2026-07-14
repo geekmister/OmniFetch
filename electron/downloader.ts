@@ -1,6 +1,7 @@
-import { spawn, ChildProcess, execSync } from 'child_process'
-import { existsSync, mkdirSync, unlinkSync } from 'fs'
-import { dirname } from 'path'
+import { app } from 'electron'
+import { spawn, ChildProcess, execSync, execFileSync } from 'child_process'
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs'
+import { dirname, join } from 'path'
 import { getYtdlpPath, getFfmpegPath } from './bin-resolver'
 import { AppErrorCode, AppError, makeError } from '../src/shared/error-codes'
 
@@ -58,12 +59,78 @@ export function getCurrentDownload(): DownloadState {
 }
 
 /**
- * 暂停下载 (macOS SIGSTOP)
+ * 跨平台暂停/继续下载
+ * - macOS / Linux: 使用 SIGSTOP / SIGCONT 信号（进程级挂起，最干净）
+ * - Windows: 调用 PowerShell 脚本挂起/恢复进程树（含 ffmpeg 子进程）
+ *   底层使用 Suspend-Process / Resume-Process cmdlet，
+ *   不可用时回退到 ntdll!NtSuspendProcess / NtResumeProcess P/Invoke
+ */
+
+// 记录当前是否已暂停，避免重复挂起/恢复
+let isPaused = false
+
+/**
+ * Windows 进程树挂起/恢复脚本（内联，避免依赖外部文件）
+ * 优先使用内置 Suspend-Process / Resume-Process cmdlet，
+ * 不可用时回退到 ntdll!NtSuspendProcess / NtResumeProcess P/Invoke。
+ */
+const SUSPEND_SCRIPT = `
+param([int]$Pid, [string]$Action)
+$ErrorActionPreference = 'SilentlyContinue'
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public class NtProc {
+  [DllImport("ntdll.dll")] public static extern int NtSuspendProcess(IntPtr h);
+  [DllImport("ntdll.dll")] public static extern int NtResumeProcess(IntPtr h);
+}
+'@ -ErrorAction SilentlyContinue
+function Suspend-Tree($id) {
+  try { Get-Process -Id $id -ErrorAction Stop | Suspend-Process } catch {
+    try { [NtProc]::NtSuspendProcess((Get-Process -Id $id -ErrorAction Stop).Handle) } catch {}
+  }
+  Get-CimInstance Win32_Process -Filter "ParentProcessId = $id" | ForEach-Object { Suspend-Tree $_.ProcessId }
+}
+function Resume-Tree($id) {
+  try { Get-Process -Id $id -ErrorAction Stop | Resume-Process } catch {
+    try { [NtProc]::NtResumeProcess((Get-Process -Id $id -ErrorAction Stop).Handle) } catch {}
+  }
+  Get-CimInstance Win32_Process -Filter "ParentProcessId = $id" | ForEach-Object { Resume-Tree $_.ProcessId }
+}
+if ($Action -eq 'suspend') { Suspend-Tree $Pid } else { Resume-Tree $Pid }
+`
+
+/**
+ * 通过 PowerShell 挂起/恢复进程树（Windows 专用）
+ * 将内联脚本写入临时文件后执行，避免命令行转义问题。
+ */
+function runProcessTreeScript(pid: number, action: 'suspend' | 'resume'): void {
+  const tmp = join(app.getPath('temp'), `omnifetch-suspend-${pid}.ps1`)
+  writeFileSync(tmp, SUSPEND_SCRIPT, 'utf8')
+  try {
+    execFileSync(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', tmp, '-Pid', String(pid), '-Action', action],
+      { windowsHide: true, timeout: 8000 }
+    )
+  } finally {
+    try { unlinkSync(tmp) } catch { /* 忽略清理失败 */ }
+  }
+}
+
+/**
+ * 暂停下载
  */
 export function pauseDownload(): boolean {
-  if (currentDownload.process && currentDownload.process.pid) {
+  const proc = currentDownload.process
+  if (proc && proc.pid && !isPaused) {
     try {
-      process.kill(currentDownload.process.pid, 'SIGSTOP')
+      if (process.platform === 'win32') {
+        runProcessTreeScript(proc.pid, 'suspend')
+      } else {
+        process.kill(proc.pid, 'SIGSTOP')
+      }
+      isPaused = true
       console.log('[download] 已暂停')
       return true
     } catch (err) {
@@ -75,12 +142,18 @@ export function pauseDownload(): boolean {
 }
 
 /**
- * 继续下载 (macOS SIGCONT)
+ * 继续下载
  */
 export function resumeDownload(): boolean {
-  if (currentDownload.process && currentDownload.process.pid) {
+  const proc = currentDownload.process
+  if (proc && proc.pid && isPaused) {
     try {
-      process.kill(currentDownload.process.pid, 'SIGCONT')
+      if (process.platform === 'win32') {
+        runProcessTreeScript(proc.pid, 'resume')
+      } else {
+        process.kill(proc.pid, 'SIGCONT')
+      }
+      isPaused = false
       console.log('[download] 已继续')
       return true
     } catch (err) {
@@ -114,6 +187,7 @@ export function cancelDownload(deleteFile: boolean): boolean {
     }
   }
   currentDownload = { process: null, outputPath: '' }
+  isPaused = false
   return true
 }
 
@@ -447,9 +521,10 @@ export async function startDownload(
     mkdirSync(dir, { recursive: true })
   }
 
-  // 保存当前下载上下文，重置取消标记
+  // 保存当前下载上下文，重置取消标记与暂停状态
   currentDownload.outputPath = outputPath
   wasCancelledByUser = false
+  isPaused = false
 
   return new Promise((resolve, reject) => {
     const args = [
@@ -519,6 +594,7 @@ export async function startDownload(
 
     ytdlp.on('close', (code) => {
       currentDownload.process = null
+      isPaused = false
       if (wasCancelledByUser) {
         wasCancelledByUser = false
         // 用户主动取消，标记 cancelled 让主进程不弹完成通知
