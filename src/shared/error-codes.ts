@@ -55,7 +55,10 @@ export const ERROR_MESSAGES: Record<AppErrorCode, { message: string; hint?: stri
   PARSE_NO_FORMAT: { message: '未找到可下载的视频格式' },
   DOWNLOAD_FAILED: { message: '下载失败，请稍后重试' },
   DOWNLOAD_CANCELLED: { message: '下载已取消' },
-  NETWORK_ERROR: { message: '网络连接失败，请检查网络' },
+  NETWORK_ERROR: {
+    message: '网络连接失败，请检查网络',
+    hint: '若访问的是境外/受限站点，请开启 VPN 或代理，并确保其已写入系统代理或 HTTPS_PROXY 环境变量（如 http://127.0.0.1:7890）',
+  },
   PROXY_ERROR: { message: '代理配置无效，请检查 HTTPS_PROXY 环境变量' },
   UNKNOWN: { message: '发生未知错误' },
 }

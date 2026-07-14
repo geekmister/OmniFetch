@@ -113,13 +113,84 @@ export function cancelDownload(deleteFile: boolean): boolean {
  * 自动探测代理地址
  * 优先级:
  *   1. HTTPS_PROXY / HTTP_PROXY 环境变量
- *   2. macOS 系统代理设置 (networksetup / scutil)
- * 
+ *   2. Windows 系统代理设置 (Internet Settings 注册表)
+ *   3. macOS 系统代理设置 (networksetup / scutil)
+ *
  * 如果你的 VPN/代理未通过环境变量暴露，请在启动前设置:
- *   export HTTPS_PROXY=http://127.0.0.1:7890   # Clash 默认端口
+ *   set HTTPS_PROXY=http://127.0.0.1:7890   # Windows (Clash 默认端口)
+ *   export HTTPS_PROXY=http://127.0.0.1:7890 # macOS / Linux
  */
-// 缓存代理检测结果，避免每次调用都执行 scutil
+// 缓存代理检测结果，避免每次调用都执行 scutil / reg query
 let cachedProxy: string | null | undefined = undefined
+
+/**
+ * 将 Windows 注册表中的代理地址规范化为 yt-dlp 可识别的 URL。
+ * - 已带 http:// / socks*:// 前缀则原样返回
+ * - socks / socks5 协议补 socks5:// 前缀
+ * - 其余（http/https 或裸地址）补 http:// 前缀
+ */
+function normalizeProxyAddr(addr: string, proto: string): string {
+  const a = addr.trim()
+  if (a.startsWith('http://') || a.startsWith('https://') || a.startsWith('socks')) return a
+  if (proto === 'socks' || proto === 'socks5') return `socks5://${a}`
+  return `http://${a}`
+}
+
+/**
+ * 解析 Windows ProxyServer 值。
+ * 支持两种格式:
+ *   - 协议特定: http=127.0.0.1:7890;https=127.0.0.1:7890;socks=127.0.0.1:7891
+ *   - 单一地址:   127.0.0.1:7890 (对所有协议生效)
+ * 优先返回 https / http / socks 之一。
+ */
+function parseWindowsProxyServer(raw: string): string | null {
+  const value = raw.trim()
+  if (!value) return null
+
+  if (value.includes('=')) {
+    const parts = value.split(';')
+    // 优先匹配 https / http / socks
+    for (const p of parts) {
+      const idx = p.indexOf('=')
+      if (idx === -1) continue
+      const proto = p.slice(0, idx).trim().toLowerCase()
+      const addr = p.slice(idx + 1).trim()
+      if (!addr) continue
+      if (proto === 'https' || proto === 'http' || proto === 'socks' || proto === 'socks5') {
+        return normalizeProxyAddr(addr, proto)
+      }
+    }
+    // 回退：取第一个协议的值
+    const first = parts[0].split('=')[1]?.trim()
+    return first ? normalizeProxyAddr(first, 'http') : null
+  }
+
+  // 单一地址（对所有协议生效）
+  return normalizeProxyAddr(value, 'http')
+}
+
+/**
+ * 读取 Windows 系统代理（Internet Options → 局域网设置）。
+ * 通过 HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings 注册表判断。
+ * 注意: 仅处理手动代理服务器，不解析 PAC 自动配置脚本与 WPAD。
+ */
+function detectWindowsProxy(): string | null {
+  try {
+    const base = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'
+    const enableOut = execSync(`reg query "${base}" /v ProxyEnable`, { encoding: 'utf8', timeout: 3000 })
+    const enableMatch = enableOut.match(/ProxyEnable\s+REG_DWORD\s+0x([0-9a-fA-F]+)/)
+    if (!enableMatch || parseInt(enableMatch[1], 16) === 0) return null
+
+    const serverOut = execSync(`reg query "${base}" /v ProxyServer`, { encoding: 'utf8', timeout: 3000 })
+    const serverMatch = serverOut.match(/ProxyServer\s+REG_SZ\s+(.+)/)
+    if (!serverMatch) return null
+
+    return parseWindowsProxyServer(serverMatch[1])
+  } catch {
+    // reg 不可用或键不存在时静默跳过
+    return null
+  }
+}
 
 function detectProxy(): string | null {
   if (cachedProxy !== undefined) return cachedProxy
@@ -127,13 +198,23 @@ function detectProxy(): string | null {
   const envVars = ['HTTPS_PROXY', 'HTTP_PROXY', 'https_proxy', 'http_proxy', 'ALL_PROXY', 'all_proxy']
   for (const key of envVars) {
     const val = process.env[key]
-    if (val && (val.startsWith('http://') || val.startsWith('socks5://'))) {
+    if (val && (val.startsWith('http') || val.startsWith('socks'))) {
       cachedProxy = val
       return val
     }
   }
 
-  // 2. macOS: 读取系统代理设置
+  // 2. Windows: 读取系统代理设置（Internet Settings 注册表）
+  if (process.platform === 'win32') {
+    const proxy = detectWindowsProxy()
+    if (proxy) {
+      cachedProxy = proxy
+      console.log(`[proxy] 检测到 Windows 系统代理: ${proxy}`)
+      return proxy
+    }
+  }
+
+  // 3. macOS: 读取系统代理设置
   if (process.platform === 'darwin') {
     try {
       const output = execSync('scutil --proxy', { encoding: 'utf8', timeout: 3000 })
