@@ -62,10 +62,12 @@
               <span class="format-note">{{ fmt.note || fmt.ext }}</span>
             </div>
 
-            <!-- 文件大小 -->
-            <span v-if="fmt.filesize" class="format-size">
-              {{ formatSize(fmt.filesize) }}
-            </span>
+            <!-- 右侧常驻信息：码率 + 文件大小 -->
+            <div class="format-meta">
+              <span class="meta-bitrate">{{ bitrateText(fmt) }}</span>
+              <span class="meta-divider">·</span>
+              <span class="meta-size">{{ sizeText(fmt) }}</span>
+            </div>
           </div>
         </t-radio-button>
       </t-radio-group>
@@ -95,6 +97,19 @@ function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)}MB`
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)}GB`
+}
+
+function bitrateText(fmt: VideoFormat): string {
+  // 视频优先总码率/视频码率，音频用 abr
+  const br = fmt.resolution === '音频' ? fmt.abr : (fmt.tbr ?? fmt.vbr)
+  if (br == null) return '—'
+  return `${Math.round(br)}kbps`
+}
+
+function sizeText(fmt: VideoFormat): string {
+  if (fmt.filesize) return formatSize(fmt.filesize)
+  if (fmt.filesizeApprox) return `约 ${formatSize(fmt.filesizeApprox)}`
+  return '大小未知'
 }
 </script>
 
@@ -180,12 +195,29 @@ function formatSize(bytes: number): string {
   margin-bottom: 12px;
 }
 .format-list {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
-  gap: 6px;
-  max-height: 256px;
-  overflow-y: auto;
+  width: 100%;
+  /* max-height: 256px;
+  overflow-y: auto; */
   padding-right: 4px;
+}
+.format-list :deep(.t-radio-group) {
+  display: flex !important;
+  flex-direction: column;
+  width: 100%;
+}
+.format-list :deep(.t-radio-button) {
+  width: 100%;
+  display: flex !important;
+  flex: unset;
+  padding: 5px 0;
+}
+.format-list :deep(.t-radio-button__label) {
+  flex: 1;
+  display: flex !important;
+  align-items: center;
+  width: 100%;
 }
 .format-item {
   width: 100%;
@@ -209,9 +241,23 @@ function formatSize(bytes: number): string {
   font-size: 12px;
   color: var(--td-text-color-primary);
 }
-.format-size {
+.format-meta {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.meta-bitrate {
+  font-size: 12px;
+  color: var(--td-text-color-primary);
+}
+.meta-divider {
+  font-size: 12px;
+  color: var(--td-text-color-placeholder);
+}
+.meta-size {
   font-size: 11px;
   color: var(--td-text-color-placeholder);
-  flex-shrink: 0;
 }
 </style>
