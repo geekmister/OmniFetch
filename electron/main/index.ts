@@ -66,8 +66,7 @@ function createWindow() {
     // - NODE_ENV_ELECTRON_VITE：固定为 'development'
     // 用这两个变量判断开发模式，确保 `npm run dev` 也能稳定打开 DevTools
     const isDev =
-        process.env.NODE_ENV_ELECTRON_VITE === 'development' ||
-        !!process.env.ELECTRON_RENDERER_URL;
+        process.env.NODE_ENV_ELECTRON_VITE === 'development' || !!process.env.ELECTRON_RENDERER_URL;
     const devServerUrl = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5173';
     if (isDev) {
         mainWindow.loadURL(devServerUrl);
