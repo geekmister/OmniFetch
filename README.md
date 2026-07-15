@@ -126,6 +126,7 @@ OmniFetch ships with bundled runtime binaries, organized by **platform-arch** un
 - `bin/darwin-arm64/yt-dlp` + `ffmpeg` (Apple Silicon)
 - `bin/darwin-x64/yt-dlp` + `ffmpeg` (Intel)
 - `bin/linux-x64/yt-dlp` + `ffmpeg`
+- `bin/linux-arm64/yt-dlp` + `ffmpeg` (Raspberry Pi / ARM servers)
 
 > ⚠️ Binaries are platform-specific. You **must run `npm run download:bins` on the target platform** to fetch the matching build. Copying binaries across platforms causes incompatibility (e.g. a macOS Mach-O binary cannot run on Windows).
 
@@ -152,8 +153,9 @@ The app **ships prebuilt binaries for all platforms** in the installer, and `bin
 | `darwin-arm64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-arm64/yt-dlp`  |
 | `darwin-x64`   | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-x64/yt-dlp`    |
 | `linux-x64`    | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-x64/yt-dlp`     |
+| `linux-arm64`  | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-arm64/yt-dlp`   |
 
-> Note: the macOS yt-dlp build is a universal binary, so `darwin-arm64` and `darwin-x64` share the same URL.
+> Note: the macOS yt-dlp build is a universal binary, so `darwin-arm64` and `darwin-x64` share the same URL; on Linux, `x64` and `arm64` share the same `yt-dlp_linux` URL.
 
 #### Proxy Auto-Detection
 
@@ -168,12 +170,13 @@ If no proxy is detected, yt-dlp connects directly. For geo-blocked or restricted
 
 **ffmpeg**
 
-| Platform-arch  | Download URL                                                                                        | Extract to                                                |
-| -------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `win32-x64`    | `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip` | extract `bin/ffmpeg.exe` → `bin/win32-x64/ffmpeg.exe`     |
-| `darwin-arm64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | extract `ffmpeg` → `bin/darwin-arm64/ffmpeg`              |
-| `darwin-x64`   | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | extract `ffmpeg` → `bin/darwin-x64/ffmpeg`                |
-| `linux-x64`    | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz`                      | extract `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg` |
+| Platform-arch  | Download URL                                                                                        | Extract to                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `win32-x64`    | `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip` | extract `bin/ffmpeg.exe` → `bin/win32-x64/ffmpeg.exe`       |
+| `darwin-arm64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | extract `ffmpeg` → `bin/darwin-arm64/ffmpeg`                |
+| `darwin-x64`   | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | extract `ffmpeg` → `bin/darwin-x64/ffmpeg`                  |
+| `linux-x64`    | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz`                      | extract `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg`   |
+| `linux-arm64`  | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz`                      | extract `ffmpeg-*-static/ffmpeg` → `bin/linux-arm64/ffmpeg` |
 
 > Note: Windows/Linux ffmpeg ships as an archive and must be extracted; macOS ships as a bare binary zip.
 

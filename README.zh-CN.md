@@ -126,6 +126,7 @@ OmniFetch 自带运行时二进制文件，按 **平台-架构** 分目录存放
 - `bin/darwin-arm64/yt-dlp` + `ffmpeg`（Apple Silicon）
 - `bin/darwin-x64/yt-dlp` + `ffmpeg`（Intel）
 - `bin/linux-x64/yt-dlp` + `ffmpeg`
+- `bin/linux-arm64/yt-dlp` + `ffmpeg`（树莓派 / ARM 服务器等）
 
 > ⚠️ 二进制是平台相关的，**必须在目标平台执行 `npm run download:bins`** 以获取对应版本。跨平台直接拷贝会导致不兼容（如 macOS 的 Mach-O 二进制无法在 Windows 上运行）。
 
@@ -152,8 +153,9 @@ Electron 主进程通过 `electron/bin-resolver.ts` 解析内置二进制文件�
 | `darwin-arm64` | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-arm64/yt-dlp`  |
 | `darwin-x64`   | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos` | `bin/darwin-x64/yt-dlp`    |
 | `linux-x64`    | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-x64/yt-dlp`     |
+| `linux-arm64`  | `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux` | `bin/linux-arm64/yt-dlp`   |
 
-> 注：yt-dlp 的 macOS 版为通用二进制（universal），`darwin-arm64` 与 `darwin-x64` 共用同一链接。
+> 注：yt-dlp 的 macOS 版为通用二进制（universal），`darwin-arm64` 与 `darwin-x64` 共用同一链接；Linux 的 `x64` 与 `arm64` 共用同一 `yt-dlp_linux` 链接。
 
 #### 代理自动探测
 
@@ -168,12 +170,13 @@ OmniFetch 会自动探测代理，并通过 `--proxy` 参数传递给 yt-dlp，�
 
 **ffmpeg**
 
-| 平台-架构      | 下载链接                                                                                            | 提取目标                                                 |
-| -------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `win32-x64`    | `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip` | 解压取 `bin/ffmpeg.exe` → `bin/win32-x64/ffmpeg.exe`     |
-| `darwin-arm64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | 解压取 `ffmpeg` → `bin/darwin-arm64/ffmpeg`              |
-| `darwin-x64`   | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | 解压取 `ffmpeg` → `bin/darwin-x64/ffmpeg`                |
-| `linux-x64`    | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz`                      | 解压取 `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg` |
+| 平台-架构      | 下载链接                                                                                            | 提取目标                                                   |
+| -------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `win32-x64`    | `https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip` | 解压取 `bin/ffmpeg.exe` → `bin/win32-x64/ffmpeg.exe`       |
+| `darwin-arm64` | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | 解压取 `ffmpeg` → `bin/darwin-arm64/ffmpeg`                |
+| `darwin-x64`   | `https://evermeet.cx/ffmpeg/ffmpeg-7.0.2.zip`                                                       | 解压取 `ffmpeg` → `bin/darwin-x64/ffmpeg`                  |
+| `linux-x64`    | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz`                      | 解压取 `ffmpeg-*-static/ffmpeg` → `bin/linux-x64/ffmpeg`   |
+| `linux-arm64`  | `https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz`                      | 解压取 `ffmpeg-*-static/ffmpeg` → `bin/linux-arm64/ffmpeg` |
 
 > 注：Windows / Linux 的 ffmpeg 为压缩包，需解压后提取可执行文件；macOS 为裸二进制 zip。
 
