@@ -462,7 +462,7 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
             stderr += data.toString();
         });
 
-        ytdlp.on('error', (err: NodeJS.ErrnoException) => {
+        ytdlp.on('error', (err: Error & { code?: string }) => {
             if (err.code === 'ENOENT') {
                 reject(makeError(AppErrorCode.YTDLP_NOT_FOUND));
             } else {
@@ -640,7 +640,7 @@ export async function startDownload(
             }
         });
 
-        ytdlp.on('error', (err: NodeJS.ErrnoException) => {
+        ytdlp.on('error', (err: Error & { code?: string }) => {
             currentDownload.process = null;
             if (err.code === 'ENOENT') {
                 reject(makeError(AppErrorCode.YTDLP_NOT_FOUND));
