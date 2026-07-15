@@ -8,11 +8,15 @@
     "scripts": {
         "dev": "node scripts/dev.mjs",
         "download:bins": "node scripts/download-bins.mjs",
+        "download:bins:all": "node scripts/download-bins.mjs --all",
         "sync:bin-versions": "node scripts/sync-bin-versions.mjs",
         "typecheck": "vue-tsc --noEmit -p tsconfig.json",
         "build": "electron-vite build",
         "electron:dev": "cross-env NODE_ENV=development electron-vite dev",
-        "electron:build": "npm run download:bins && electron-vite build && electron-builder",
+        "electron:build": "npm run download:bins:all && electron-vite build && electron-builder --mac --win --linux --x64 --arm64",
+        "electron:build:mac": "npm run download:bins:all && electron-vite build && electron-builder --mac --x64 --arm64",
+        "electron:build:win": "npm run download:bins:all && electron-vite build && electron-builder --win --x64",
+        "electron:build:linux": "npm run download:bins:all && electron-vite build && electron-builder --linux --x64 --arm64",
         "preview": "electron-vite preview"
     },
     "dependencies": {
