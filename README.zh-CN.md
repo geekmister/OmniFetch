@@ -253,3 +253,11 @@ OmniFetch 依赖 yt-dlp 的提取器支持 1000+ 网站。完整支持站点列�
 ## 许可证
 
 基于 [MIT 许可证](LICENSE) 发布。
+
+---
+
+<p align="center">
+  <a href="https://github.com/Geekmister/OmniFetch">
+    <img src="https://capsule-render.vercel.app/api?type=waving&height=120&color=0:0f3460,50:16213e,100:1a1a2e&section=footer&text=Happy%20Downloading!&fontColor=7ec8a0&fontSize=28" alt="Footer" />
+  </a>
+</p>

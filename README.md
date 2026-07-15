@@ -233,3 +233,11 @@ OmniFetch relies on yt-dlp's extractors to support 1000+ websites. For the full 
 ## License
 
 MIT License
+
+---
+
+<p align="center">
+  <a href="https://github.com/Geekmister/OmniFetch">
+    <img src="https://capsule-render.vercel.app/api?type=waving&height=120&color=0:0f3460,50:16213e,100:1a1a2e&section=footer&text=Happy%20Downloading!&fontColor=7ec8a0&fontSize=28" alt="Footer" />
+  </a>
+</p>
