@@ -55,20 +55,20 @@ const SOURCES = {
 };
 
 function getYtdlpUrl(platform) {
-  return SOURCES.ytdlp[platform] || SOURCES.ytdlp.linux
+    return SOURCES.ytdlp[platform] || SOURCES.ytdlp.linux;
 }
 
 function getFfmpegUrl(platform, arch) {
-  const key = `${platform}_${arch}`
-  return SOURCES.ffmpeg[key] || SOURCES.ffmpeg.linux_x64
+    const key = `${platform}_${arch}`;
+    return SOURCES.ffmpeg[key] || SOURCES.ffmpeg.linux_x64;
 }
 
 function getYtdlpName(platform) {
-  return platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp'
+    return platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp';
 }
 
 function getFfmpegName(platform) {
-  return platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg'
+    return platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
 }
 
 // ===== 检测系统代理（用于日志提示）=====
@@ -82,8 +82,9 @@ function detectProxy() {
             const m = out.match(/HTTPSProxy\s*:\s*(\S+)/);
             const p = out.match(/HTTPSPort\s*:\s*(\d+)/);
             if (m && p) return `http://${m[1]}:${p[1]}`;
-        } catch {
-            // 忽略代理检测失败
+        } catch (err) {
+            // 代理检测为可选项，失败则忽略（仅在 DEBUG 下提示）
+            if (process.env.DEBUG) console.debug(`   ⚠ 代理检测失败: ${err.message}`);
         }
     }
     return null;
@@ -109,8 +110,8 @@ function downloadFile(url, destPath) {
             file.close();
             try {
                 if (existsSync(tmpPath)) unlinkSync(tmpPath);
-            } catch {
-                // 忽略清理失败
+            } catch (err) {
+                console.warn(`   ⚠ 清理临时文件失败: ${tmpPath} (${err.message})`);
             }
         };
 
@@ -178,12 +179,10 @@ function downloadFile(url, destPath) {
     });
 }
 
-// ===== 主流程 =====
-async function main() {
-    console.log('🔧 OmniFetch - 下载运行时二进制文件');
-    console.log(`   平台: ${PLATFORM} / ${ARCH}`);
-    const TARGET_DIR = join(BIN_DIR, `${PLATFORM}-${ARCH}`);
-    console.log(`   目标: ${TARGET_DIR}\n`);
+// ===== 单个平台-架构的下载流程 =====
+async function downloadForPlatform(platform, arch) {
+    const TARGET_DIR = join(BIN_DIR, `${platform}-${arch}`);
+    console.log(`\n📂 [${platform}-${arch}] 目标: ${TARGET_DIR}`);
 
     // 创建 bin/<platform>-<arch> 目录
     if (!existsSync(TARGET_DIR)) {
@@ -191,9 +190,9 @@ async function main() {
     }
 
     // 1. 下载 yt-dlp
-    const ytdlpName = getYtdlpName();
+    const ytdlpName = getYtdlpName(platform);
     const ytdlpPath = join(TARGET_DIR, ytdlpName);
-    const ytdlpUrl = getYtdlpUrl();
+    const ytdlpUrl = getYtdlpUrl(platform);
 
     if (existsSync(ytdlpPath)) {
         console.log(`📦 yt-dlp 已存在，跳过下载`);
@@ -201,7 +200,7 @@ async function main() {
         console.log(`📦 下载 yt-dlp...`);
         try {
             await downloadFile(ytdlpUrl, ytdlpPath);
-            if (PLATFORM !== 'win32') {
+            if (platform !== 'win32') {
                 chmodSync(ytdlpPath, 0o755);
             }
             console.log(`   ✅ yt-dlp 就绪: ${ytdlpPath}`);
@@ -212,26 +211,26 @@ async function main() {
     }
 
     // 2. 下载 ffmpeg
-    const ffmpegName = getFfmpegName();
+    const ffmpegName = getFfmpegName(platform);
     const ffmpegPath = join(TARGET_DIR, ffmpegName);
-    const ffmpegUrl = getFfmpegUrl();
+    const ffmpegUrl = getFfmpegUrl(platform, arch);
 
     if (existsSync(ffmpegPath)) {
         console.log(`📦 ffmpeg 已存在，跳过下载`);
     } else {
         console.log(`📦 下载 ffmpeg...`);
         try {
-            if (PLATFORM === 'darwin') {
+            if (platform === 'darwin') {
                 // macOS: 直接下载静态二进制 zip
                 const zipPath = join(TARGET_DIR, 'ffmpeg.zip');
                 await downloadFile(ffmpegUrl, zipPath);
                 console.log(`   解压中...`);
                 execSync(`unzip -o "${zipPath}" -d "${TARGET_DIR}"`, { stdio: 'pipe' });
                 unlinkSync(zipPath);
-                if (PLATFORM !== 'win32') {
+                if (platform !== 'win32') {
                     chmodSync(ffmpegPath, 0o755);
                 }
-            } else if (PLATFORM === 'win32') {
+            } else if (platform === 'win32') {
                 // Windows: 下载 zip，解压取 bin/ffmpeg.exe
                 const zipPath = join(TARGET_DIR, 'ffmpeg.zip');
                 await downloadFile(ffmpegUrl, zipPath);
@@ -260,8 +259,10 @@ async function main() {
                         `rmdir /s /q "${join(TARGET_DIR, 'ffmpeg-master-latest-win64-gpl')}"`,
                         { stdio: 'pipe' },
                     );
-                } catch {
-                    // 忽略清理失败
+                } catch (err) {
+                    console.warn(
+                        `   ⚠ 清理解压目录失败，可手动删除: ${join(TARGET_DIR, 'ffmpeg-master-latest-win64-gpl')} (${err.message})`,
+                    );
                 }
             } else {
                 // Linux: 下载 tar.xz，解压取 ffmpeg 静态二进制
@@ -271,9 +272,7 @@ async function main() {
                 execSync(`tar -xf "${xzPath}" -C "${TARGET_DIR}"`, { stdio: 'pipe' });
                 unlinkSync(xzPath);
                 // johnvansickle 压缩包结构: ffmpeg-*-static/ffmpeg
-                const staticDir = (await import('fs'))
-                    .readdirSync(TARGET_DIR)
-                    .find((d) => d.includes('static'));
+                const staticDir = readdirSync(TARGET_DIR).find((d) => d.includes('static'));
                 if (staticDir) {
                     const extracted = join(TARGET_DIR, staticDir, 'ffmpeg');
                     if (existsSync(extracted)) {
@@ -293,7 +292,26 @@ async function main() {
         }
     }
 
-    // 写入/更新 manifest.json，记录当前平台-架构的预置版本
+    return `${platform}-${arch}`;
+}
+
+// ===== 主流程 =====
+async function main() {
+    const all = process.argv.includes('--all');
+    console.log('🔧 OmniFetch - 下载运行时二进制文件');
+    console.log(
+        `   模式: ${all ? '全平台-架构 (--all)' : `当前平台 ${process.platform}/${process.arch}`}\n`,
+    );
+
+    const targets = all ? ALL_TARGETS : [{ platform: process.platform, arch: process.arch }];
+
+    const doneKeys = [];
+    for (const { platform, arch } of targets) {
+        const key = await downloadForPlatform(platform, arch);
+        doneKeys.push(key);
+    }
+
+    // 写入/更新 manifest.json，记录本次处理的平台-架构预置版本
     const manifestPath = join(BIN_DIR, 'manifest.json');
     let manifest = {
         comment: 'OmniFetch 预置二进制清单，由 npm run download:bins 生成。',
@@ -304,18 +322,16 @@ async function main() {
         try {
             manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
             manifest.binaries = manifest.binaries || {};
-        } catch {
-            // 忽略解析失败，使用默认 manifest
+        } catch (err) {
+            console.warn(`   ⚠ manifest.json 解析失败，将使用默认配置重建: ${err.message}`);
         }
     }
-    const key = `${PLATFORM}-${ARCH}`;
     manifest.generatedAt = new Date().toISOString().slice(0, 10);
-    manifest.binaries[key] = {
-        'yt-dlp': ytdlpName,
-        ffmpeg: ffmpegName,
-    };
+    for (const key of doneKeys) {
+        if (!manifest.binaries[key]) manifest.binaries[key] = {};
+    }
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
-    console.log(`   📝 已更新 manifest.json (${key})`);
+    console.log(`\n📝 已更新 manifest.json: ${doneKeys.join(', ')}`);
 
     console.log(`\n🎉 二进制文件准备完成!`);
 }
