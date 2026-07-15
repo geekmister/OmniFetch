@@ -107,6 +107,8 @@ export const useDownloadStore = defineStore('download', () => {
 
         // 注册进度监听
         window.electronAPI.onDownloadProgress((p) => {
+            console.info('下载进度:', p);
+
             progress.value = p.percent;
             if (p.speed) speed.value = p.speed;
             if (p.eta) eta.value = p.eta;
